@@ -1,10 +1,6 @@
-Absolutely. Below is a **clean, portfolio-style `README.md`** designed to replace the 2,400-line version. It keeps the important engineering story but pushes the exhaustive debugging/history into your detailed documentation.
 
-I’ve kept claims tied to what we actually established in the project/documentation rather than inventing specifications that aren't supported. 
 
-**Copy-paste everything below directly into `V1/README.md`:**
 
-````markdown
 # 🧠 llm_by_me
 
 ### Building a Language Model From Scratch — V1
