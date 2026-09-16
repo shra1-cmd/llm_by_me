@@ -58,8 +58,8 @@ class TrainingConfig:
     # Checkpointing
     # --------------------------------------------------
 
-    checkpoint_interval: int = 500
-    checkpoint_dir: str = "checkpoints/v1"
+    checkpoint_interval: int = 50
+    checkpoint_dir: str = "/content/drive/MyDrive/llm_by_me_data/checkpoints/v1"
 
     # --------------------------------------------------
     # Logging
