@@ -908,7 +908,7 @@ It contains:
 * Validation details
 * Training observations
 
-### 👉 [Read the complete V1 engineering documentation](docs/V1_DETAILED_DOCUMENTATION.md)
+### 👉 [Read the complete V1 engineering documentation](Docs/V1_DETAILED_DOCUMENTATION.md)
 
 ---
 
