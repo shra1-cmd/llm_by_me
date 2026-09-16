@@ -56,12 +56,11 @@ def main():
     print("=" * 60)
 
     print(f"Device          : {device}")
+    
     print(
-        f"BF16 available  : "
-        f"{torch.cuda.is_bf16_supported() "
-        if torch.cuda.is_available()
-        else False}"
-    )
+    f"BF16 available : "
+    f"{torch.cuda.is_bf16_supported() if torch.cuda.is_available() else False}"
+   )
 
     print(
         f"Batch size      : "
