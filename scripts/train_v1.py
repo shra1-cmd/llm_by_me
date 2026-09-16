@@ -108,7 +108,7 @@ def main():
         split="train",
         seq_len=training_config.seq_len,
         batch_size=training_config.batch_size,
-        shuffle=True,
+        shuffle=False,
     )
 
     val_loader = create_dataloader(
