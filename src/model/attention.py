@@ -74,6 +74,8 @@ class GroupedQueryAttention(nn.Module):
         x: torch.Tensor,
         kv_cache=None,
         layer_idx: int | None = None,
+        position_ids: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         kv_cache:
@@ -82,6 +84,17 @@ class GroupedQueryAttention(nn.Module):
         layer_idx:
             which layer's slot in kv_cache this call reads/writes.
             Required whenever kv_cache is not None.
+
+        position_ids:
+            optional [B, T] per-row absolute positions for RoPE
+            (Phase 9 batching). None keeps the past_seq_len offset.
+
+        attention_mask:
+            optional bool mask broadcastable to [B, H, T_q, T_k],
+            True = may attend. Replaces the built-in causal mask, so
+            it must already include causality (Phase 9 batching,
+            where padding differs per row). None keeps the Phase 4
+            behavior.
         """
 
         B, T, C = x.shape
@@ -139,7 +152,12 @@ class GroupedQueryAttention(nn.Module):
         # offset (past_seq_len). Cached k already has RoPE baked in
         # from when it was computed, so it must not be rotated again.
 
-        q, k = self.rope(q, k, start_pos=past_seq_len)
+        q, k = self.rope(
+            q,
+            k,
+            start_pos=past_seq_len,
+            position_ids=position_ids,
+        )
 
         # --------------------------------------------------
         # KV cache
@@ -191,7 +209,10 @@ class GroupedQueryAttention(nn.Module):
         # not reliably produce this for a non-square (T_q != T_k)
         # attention, so the mask is built explicitly instead.
 
-        if past_seq_len == 0:
+        if attention_mask is not None:
+            attn_mask = attention_mask
+            is_causal = False
+        elif past_seq_len == 0:
             attn_mask = None
             is_causal = True
         else:

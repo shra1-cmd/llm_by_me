@@ -11,7 +11,9 @@ pause / resume / schedule) a single generation:
     ├── generated_tokens      grows by one per sampled token
     ├── sampling_params       SamplingParams (owned by this request)
     ├── max_new_tokens
-    ├── kv_cache              this request's own KVCache
+    ├── kv_cache              this request's KV handle (Phase 10: a
+    │                         PagedKVCache backed by KVCacheManager
+    │                         blocks; block_ids shows which ones)
     ├── status                RequestStatus
     └── finish_reason         FinishReason once FINISHED / ABORTED
 
@@ -26,7 +28,9 @@ generate (max_new_tokens == 0, or the prompt already fills
 max_seq_len). PREFILLING goes straight to FINISHED when the very
 first sampled token already completes the request.
 
-No scheduling here: the engine still runs one request at a time.
+Phase 10 adds FinishReason.OUT_OF_KV_BLOCKS: a request is aborted
+with that reason when the KVCacheManager cannot give it (more)
+blocks, instead of corrupting another request's memory.
 """
 
 import itertools
@@ -86,6 +90,7 @@ class FinishReason(Enum):
     MAX_NEW_TOKENS = "max_new_tokens"
     MAX_SEQ_LEN = "max_seq_len"
     ABORTED = "aborted"
+    OUT_OF_KV_BLOCKS = "out_of_kv_blocks"
 
 
 _ALLOWED_TRANSITIONS = {
@@ -174,6 +179,12 @@ class InferenceRequest:
         return self.kv_cache.get_seq_length() if self.kv_cache is not None else 0
 
     @property
+    def block_ids(self) -> list[int]:
+        """KV blocks currently held (Phase 10 paged caches only)."""
+
+        return list(getattr(self.kv_cache, "block_ids", []))
+
+    @property
     def is_finished(self) -> bool:
         return self.status in (RequestStatus.FINISHED, RequestStatus.ABORTED)
 
@@ -200,9 +211,9 @@ class InferenceRequest:
         self._transition(RequestStatus.FINISHED)
         self.finish_reason = reason
 
-    def abort(self):
+    def abort(self, reason: FinishReason = FinishReason.ABORTED):
         self._transition(RequestStatus.ABORTED)
-        self.finish_reason = FinishReason.ABORTED
+        self.finish_reason = reason
 
     def check_stop(self) -> FinishReason | None:
         """

@@ -23,6 +23,21 @@ drives ("how do I execute the model?"):
     prefill(input_ids [1, N])          -> logits + fresh KV cache (len N)
     decode(token [1, 1], kv_cache)     -> logits + same cache (len +1)
 
+Phase 9 adds the batched versions of both modes:
+
+    prefill_batch(batch)   -> logits [B, vocab] + one new KVCache per row
+    decode_batch(batch)    -> logits [B, vocab]; each row's own KVCache
+                              grows by 1
+
+The runner never shares KV state between rows: batched K/V only
+exists for the duration of one forward call.
+
+Phase 10: prefill / prefill_batch accept the cache(s) to fill, so the
+engine can pass PagedKVCache handles backed by the KVCacheManager's
+blocks. Without them the runner falls back to a private KVCache, as
+in Phases 6-9. Decode works with either, since both expose the same
+get_seq_length / get / update interface.
+
 `generate` below stays the untouched naive reference.
 """
 
@@ -31,7 +46,8 @@ from dataclasses import dataclass
 
 import torch
 
-from src.inference.kv_cache import KVCache
+from src.inference.batch import Batch, DECODE, PREFILL
+from src.inference.kv_cache import BatchedKVCache, KVCache
 from src.inference.sampler import Sampler
 
 
@@ -47,6 +63,22 @@ class DecodeOutput:
     # [B, vocab] — logits for the token after the decoded token.
     logits: torch.Tensor
     kv_cache: KVCache
+
+
+@dataclass
+class BatchPrefillOutput:
+    # [B, vocab] — row b: logits after request b's last prompt token.
+    logits: torch.Tensor
+    # One new, independent KVCache per row, in batch order.
+    kv_caches: list[KVCache]
+
+
+@dataclass
+class BatchDecodeOutput:
+    # [B, vocab]
+    logits: torch.Tensor
+    # The requests' own caches, each grown by one.
+    kv_caches: list[KVCache]
 
 
 class ModelRunner:
@@ -71,12 +103,16 @@ class ModelRunner:
         )
 
     @torch.inference_mode()
-    def prefill(self, input_ids: torch.Tensor) -> PrefillOutput:
+    def prefill(self, input_ids: torch.Tensor, kv_cache=None) -> PrefillOutput:
         """
         Process the whole prompt in one forward pass.
 
         input_ids:
             [B, N], N >= 1
+
+        kv_cache:
+            empty cache to fill (e.g. a PagedKVCache from the
+            KVCacheManager), or None for a fresh private KVCache.
 
         After this call the returned cache holds K/V for all N tokens.
         """
@@ -86,7 +122,10 @@ class ModelRunner:
                 f"prefill expects input_ids [B, N>=1], got {tuple(input_ids.shape)}"
             )
 
-        kv_cache = KVCache(num_layers=self.model.config.num_layers)
+        if kv_cache is None:
+            kv_cache = KVCache(num_layers=self.model.config.num_layers)
+        elif kv_cache.get_seq_length() != 0:
+            raise ValueError("prefill needs an empty KV cache")
 
         logits, _ = self.model(input_ids, kv_cache=kv_cache)
 
@@ -114,6 +153,107 @@ class ModelRunner:
         logits, _ = self.model(input_ids, kv_cache=kv_cache)
 
         return DecodeOutput(logits=logits[:, -1, :], kv_cache=kv_cache)
+
+    @torch.inference_mode()
+    def prefill_batch(self, batch: Batch, kv_caches=None) -> BatchPrefillOutput:
+        """
+        One forward pass over a right-padded [B, T] prompt batch.
+
+        Row b's logits are taken at its last real token, and its K/V
+        is sliced to its real length and copied into row b's own
+        cache, so no row's cache aliases another's (or the batch's).
+
+        kv_caches:
+            one empty cache per row to fill (e.g. PagedKVCache
+            handles), or None for brand-new private KVCaches.
+        """
+
+        if batch.phase != PREFILL:
+            raise ValueError(f"prefill_batch got a {batch.phase} batch")
+
+        if kv_caches is not None:
+            if len(kv_caches) != batch.size:
+                raise ValueError("prefill_batch needs one KV cache per row")
+
+            if any(c.get_seq_length() != 0 for c in kv_caches):
+                raise ValueError("prefill_batch needs empty KV caches")
+
+        batched_cache = KVCache(num_layers=self.model.config.num_layers)
+
+        logits, _ = self.model(
+            batch.input_ids,
+            kv_cache=batched_cache,
+            position_ids=batch.position_ids,
+            attention_mask=batch.model_attention_mask(),
+        )
+
+        last_index = torch.tensor(batch.seq_lens, device=logits.device) - 1
+        rows = torch.arange(batch.size, device=logits.device)
+
+        last_logits = logits[rows, last_index, :]
+
+        if kv_caches is not None:
+            # Scatter each row's real tokens into its own cache.
+            for layer_idx in range(batched_cache.num_layers):
+                k, v = batched_cache.get(layer_idx)
+
+                for row, n in enumerate(batch.seq_lens):
+                    kv_caches[row].append(
+                        layer_idx,
+                        k[row:row + 1, :, :n],
+                        v[row:row + 1, :, :n],
+                    )
+
+            return BatchPrefillOutput(logits=last_logits, kv_caches=list(kv_caches))
+
+        kv_caches = []
+
+        for row, n in enumerate(batch.seq_lens):
+            keys = []
+            values = []
+
+            for layer_idx in range(batched_cache.num_layers):
+                k, v = batched_cache.get(layer_idx)
+                keys.append(k[row:row + 1, :, :n].clone())
+                values.append(v[row:row + 1, :, :n].clone())
+
+            kv_caches.append(KVCache.from_tensors(keys, values))
+
+        return BatchPrefillOutput(logits=last_logits, kv_caches=kv_caches)
+
+    @torch.inference_mode()
+    def decode_batch(self, batch: Batch) -> BatchDecodeOutput:
+        """
+        One forward pass over one new token per row.
+
+        Each row's cache is padded into a temporary BatchedKVCache;
+        after the forward only that row's new K/V is appended back to
+        its own KVCache.
+        """
+
+        if batch.phase != DECODE:
+            raise ValueError(f"decode_batch got a {batch.phase} batch")
+
+        batched_cache = BatchedKVCache(batch.kv_caches)
+
+        logits, _ = self.model(
+            batch.input_ids,
+            kv_cache=batched_cache,
+            position_ids=batch.position_ids,
+            attention_mask=batch.model_attention_mask(),
+        )
+
+        for layer_idx in range(batched_cache.num_layers):
+            new_k, new_v = batched_cache.new_kv(layer_idx)
+
+            for row, cache in enumerate(batch.kv_caches):
+                cache.append(
+                    layer_idx,
+                    new_k[row:row + 1],
+                    new_v[row:row + 1],
+                )
+
+        return BatchDecodeOutput(logits=logits[:, -1, :], kv_caches=batch.kv_caches)
 
     @torch.inference_mode()
     def generate(

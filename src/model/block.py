@@ -47,6 +47,8 @@ class TransformerBlock(nn.Module):
         x: torch.Tensor,
         kv_cache=None,
         layer_idx: int | None = None,
+        position_ids: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
 
         # Attention sub-layer
@@ -54,6 +56,8 @@ class TransformerBlock(nn.Module):
             self.attn_norm(x),
             kv_cache=kv_cache,
             layer_idx=layer_idx,
+            position_ids=position_ids,
+            attention_mask=attention_mask,
         )
 
         # FFN sub-layer

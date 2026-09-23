@@ -51,6 +51,8 @@ class V1LanguageModel(nn.Module):
         input_ids: torch.Tensor,
         targets: torch.Tensor | None = None,
         kv_cache=None,
+        position_ids: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
     ):
         """
         input_ids:
@@ -65,6 +67,15 @@ class V1LanguageModel(nn.Module):
             Phase 4 KVCache, or None (Phase 3 behavior: every call
             recomputes attention over the full input_ids, unchanged).
             When given, it is mutated in place with this step's k/v.
+
+        position_ids:
+            optional [B, T] per-row absolute positions (Phase 9
+            batched decode, where rows sit at different positions).
+
+        attention_mask:
+            optional bool mask broadcastable to [B, 1, T, T_k],
+            True = may attend. Must already encode causality; replaces
+            the default causal mask (Phase 9 padded batches).
 
         logits:
             [B, T, vocab_size]
@@ -84,6 +95,15 @@ class V1LanguageModel(nn.Module):
                 f"maximum {self.config.max_seq_len}"
             )
 
+        if (
+            position_ids is not None
+            and position_ids.max().item() >= self.config.max_seq_len
+        ):
+            raise ValueError(
+                f"Position {position_ids.max().item()} exceeds "
+                f"maximum {self.config.max_seq_len - 1}"
+            )
+
         # --------------------------------------------------
         # Token embedding
         # --------------------------------------------------
@@ -99,7 +119,13 @@ class V1LanguageModel(nn.Module):
         # --------------------------------------------------
 
         for layer_idx, block in enumerate(self.blocks):
-            x = block(x, kv_cache=kv_cache, layer_idx=layer_idx)
+            x = block(
+                x,
+                kv_cache=kv_cache,
+                layer_idx=layer_idx,
+                position_ids=position_ids,
+                attention_mask=attention_mask,
+            )
 
         # --------------------------------------------------
         # Final normalization
