@@ -66,14 +66,19 @@ class RotaryEmbedding(nn.Module):
     def apply_rotary(
         self,
         x: torch.Tensor,
+        start_pos: int,
         seq_len: int,
     ):
         """
         x: [B, H, T, head_dim]
+
+        Positions used are [start_pos, start_pos + seq_len), so a
+        decode step (T=1) with a KV cache rotates the new token by
+        its true absolute position rather than position 0.
         """
 
-        cos = self.cos[:seq_len]
-        sin = self.sin[:seq_len]
+        cos = self.cos[start_pos:start_pos + seq_len]
+        sin = self.sin[start_pos:start_pos + seq_len]
 
         # [T, D/2] -> [T, D]
         cos = torch.repeat_interleave(
@@ -100,16 +105,19 @@ class RotaryEmbedding(nn.Module):
         self,
         q: torch.Tensor,
         k: torch.Tensor,
+        start_pos: int = 0,
     ):
         seq_len = q.size(-2)
 
         q = self.apply_rotary(
             q,
+            start_pos,
             seq_len,
         )
 
         k = self.apply_rotary(
             k,
+            start_pos,
             seq_len,
         )
 

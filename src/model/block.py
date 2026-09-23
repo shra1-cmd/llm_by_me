@@ -45,11 +45,15 @@ class TransformerBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
+        kv_cache=None,
+        layer_idx: int | None = None,
     ) -> torch.Tensor:
 
         # Attention sub-layer
         x = x + self.attention(
-            self.attn_norm(x)
+            self.attn_norm(x),
+            kv_cache=kv_cache,
+            layer_idx=layer_idx,
         )
 
         # FFN sub-layer

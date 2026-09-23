@@ -1,2 +1,3 @@
 *.pt filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text
+models/v1-hf/model.safetensors filter=lfs diff=lfs merge=lfs -text

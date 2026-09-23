@@ -1,0 +1,21 @@
+{
+  "architectures": [
+    "V1ForCausalLM"
+  ],
+  "auto_map": {
+    "AutoConfig": "configuration_v1.V1Config",
+    "AutoModelForCausalLM": "modeling_v1.V1ForCausalLM"
+  },
+  "dropout": 0.0,
+  "dtype": "float32",
+  "ffn_dim": 1408,
+  "hidden_dim": 512,
+  "max_seq_len": 512,
+  "model_type": "v1",
+  "num_kv_heads": 2,
+  "num_layers": 8,
+  "num_q_heads": 8,
+  "rms_norm_eps": 1e-06,
+  "transformers_version": "5.17.0",
+  "vocab_size": 15485
+}

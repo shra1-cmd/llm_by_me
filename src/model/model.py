@@ -50,13 +50,21 @@ class V1LanguageModel(nn.Module):
         self,
         input_ids: torch.Tensor,
         targets: torch.Tensor | None = None,
+        kv_cache=None,
     ):
         """
         input_ids:
             [B, T]
+            With a kv_cache, T is just the new tokens for this step
+            (e.g. T=1 during decode); past tokens live in the cache.
 
         targets:
             [B, T]
+
+        kv_cache:
+            Phase 4 KVCache, or None (Phase 3 behavior: every call
+            recomputes attention over the full input_ids, unchanged).
+            When given, it is mutated in place with this step's k/v.
 
         logits:
             [B, T, vocab_size]
@@ -64,9 +72,15 @@ class V1LanguageModel(nn.Module):
 
         B, T = input_ids.shape
 
-        if T > self.config.max_seq_len:
+        past_seq_len = (
+            kv_cache.get_seq_length()
+            if kv_cache is not None
+            else 0
+        )
+
+        if past_seq_len + T > self.config.max_seq_len:
             raise ValueError(
-                f"Sequence length {T} exceeds "
+                f"Sequence length {past_seq_len + T} exceeds "
                 f"maximum {self.config.max_seq_len}"
             )
 
@@ -84,8 +98,8 @@ class V1LanguageModel(nn.Module):
         # Transformer
         # --------------------------------------------------
 
-        for block in self.blocks:
-            x = block(x)
+        for layer_idx, block in enumerate(self.blocks):
+            x = block(x, kv_cache=kv_cache, layer_idx=layer_idx)
 
         # --------------------------------------------------
         # Final normalization
