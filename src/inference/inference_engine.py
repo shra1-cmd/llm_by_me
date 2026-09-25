@@ -64,7 +64,16 @@ that request alone is aborted with FinishReason.OUT_OF_KV_BLOCKS and
 nobody else's memory is touched. step_batch only admits (FIFO) as
 many requests as the free pool can hold prompts for.
 
-No continuous batching yet — that is Phase 11.
+Continuous batching lives in continuous_batching.py (Phase 11).
+
+Phase 12: `paged_kv=False` switches back to Phase 6-9 private,
+contiguous KVCache objects (no KVCacheManager blocks), so benchmarks
+can measure the original KV-cache path and the cost of paging
+separately. Default stays paged.
+
+Phase 13: sampling runs in profiler region "sampling" and batch
+construction in "batch/build" (no-ops unless profiling is enabled,
+see src/model/profiling.py).
 """
 
 import time
@@ -72,6 +81,7 @@ import time
 import torch
 
 from src.inference.batch import build_decode_batch, build_prefill_batch
+from src.inference.kv_cache import KVCache
 from src.inference.kv_cache_manager import KVCacheManager, KVCacheOutOfMemory
 from src.inference.model_runner import ModelRunner
 from src.inference.request import (
@@ -82,6 +92,7 @@ from src.inference.request import (
 )
 from src.inference.sampler import Sampler
 from src.inference.scheduler import Scheduler
+from src.model.profiling import region
 
 
 class InferenceEngine:
@@ -94,9 +105,11 @@ class InferenceEngine:
         eos_token: str = "<eos>",
         scheduler: Scheduler | None = None,
         kv_cache_manager: KVCacheManager | None = None,
+        paged_kv: bool = True,
     ):
         self.runner = runner
         self.scheduler = scheduler if scheduler is not None else Scheduler()
+        self.paged_kv = paged_kv
 
         # Default pool: room for 16 full-length sequences.
         self.kv_cache_manager = (
@@ -141,13 +154,14 @@ class InferenceEngine:
         return self._samplers[params]
 
     def _sample(self, request: InferenceRequest, logits: torch.Tensor) -> int:
-        history = torch.tensor(
-            [request.all_tokens],
-            dtype=torch.long,
-            device=self.device,
-        )
+        with region("sampling"):
+            history = torch.tensor(
+                [request.all_tokens],
+                dtype=torch.long,
+                device=self.device,
+            )
 
-        return self._sampler_for(request).sample(logits, history).item()
+            return self._sampler_for(request).sample(logits, history).item()
 
     # --------------------------------------------------
     # KV memory lifecycle (Phase 10)
@@ -157,7 +171,12 @@ class InferenceEngine:
         """
         Give a WAITING request blocks for its prompt. On OOM the
         request is aborted (nothing was allocated) and False returned.
+        With paged_kv=False it gets a private contiguous KVCache.
         """
+
+        if not self.paged_kv:
+            request.kv_cache = self.runner.new_kv_cache()
+            return True
 
         try:
             request.kv_cache = self.kv_cache_manager.create_cache(
@@ -176,6 +195,9 @@ class InferenceEngine:
         cache grows to `position`). On OOM the request is aborted and
         its blocks released.
         """
+
+        if not self.paged_kv:
+            return True
 
         try:
             self.kv_cache_manager.grow(request.request_id, request.position)
@@ -392,8 +414,16 @@ class InferenceEngine:
         if not active:
             return
 
-        batch = build_prefill_batch(active, pad_token_id=self.pad_token_id, device=self.device)
-        output = self.runner.prefill_batch(batch, kv_caches=[r.kv_cache for r in active])
+        with region("batch/build"):
+            batch = build_prefill_batch(active, pad_token_id=self.pad_token_id, device=self.device)
+        if self.paged_kv:
+            output = self.runner.prefill_batch(batch, kv_caches=[r.kv_cache for r in active])
+        else:
+            # Let the runner build private, cloned per-row caches.
+            output = self.runner.prefill_batch(batch)
+
+            for row, request in enumerate(batch.requests):
+                request.kv_cache = output.kv_caches[row]
 
         for row, request in enumerate(batch.requests):
             request.append_token(self._sample(request, output.logits[row:row + 1]))
@@ -428,7 +458,8 @@ class InferenceEngine:
         if not requests:
             return
 
-        batch = build_decode_batch(requests, device=self.device)
+        with region("batch/build"):
+            batch = build_decode_batch(requests, device=self.device)
         output = self.runner.decode_batch(batch)
 
         for row, request in enumerate(batch.requests):
@@ -534,8 +565,12 @@ class InferenceEngine:
     def admission_check(self):
         """
         can_schedule callback for the scheduler: admit requests while
-        the free pool can still hold their prompts.
+        the free pool can still hold their prompts. With paged_kv=False
+        the pool isn't used, so memory never limits admission.
         """
+
+        if not self.paged_kv:
+            return None
 
         budget = [self.kv_cache_manager.num_free_blocks]
 

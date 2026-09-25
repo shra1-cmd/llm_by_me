@@ -1,0 +1,3806 @@
+{
+  "meta": {
+    "device": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "compute_capability": "8.6",
+    "sm_count": 20,
+    "total_memory_mb": 5806,
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "fp32_matmul_precision": "highest",
+    "checkpoint": "checkpoints/v1/step_9950.pt",
+    "config": {
+      "vocab_size": 15485,
+      "max_seq_len": 512,
+      "hidden_dim": 512,
+      "num_layers": 8,
+      "num_q_heads": 8,
+      "num_kv_heads": 2,
+      "ffn_dim": 1408
+    },
+    "iters": 200,
+    "fp32_matmul_precision_after": "highest"
+  },
+  "trace": {
+    "module": "nn.Linear(512, 1408, bias=False)",
+    "input": {
+      "shape": [
+        1,
+        128,
+        512
+      ],
+      "stride": [
+        65536,
+        512,
+        1
+      ],
+      "dtype": "float32",
+      "device": "cuda:0",
+      "contiguous": true,
+      "storage_offset": 0
+    },
+    "weight": {
+      "shape": [
+        1408,
+        512
+      ],
+      "stride": [
+        512,
+        1
+      ],
+      "dtype": "float32",
+      "device": "cuda:0",
+      "contiguous": true,
+      "storage_offset": 0
+    },
+    "weight_t": {
+      "shape": [
+        512,
+        1408
+      ],
+      "stride": [
+        1,
+        512
+      ],
+      "dtype": "float32",
+      "device": "cuda:0",
+      "contiguous": false,
+      "storage_offset": 0
+    },
+    "dispatch_ops": [
+      {
+        "op": "t",
+        "overload": "aten.t.default",
+        "inputs": [
+          {
+            "shape": [
+              1408,
+              512
+            ],
+            "stride": [
+              512,
+              1
+            ],
+            "dtype": "float32",
+            "device": "cuda:0",
+            "contiguous": true,
+            "storage_offset": 0
+          }
+        ],
+        "output": {
+          "shape": [
+            512,
+            1408
+          ],
+          "stride": [
+            1,
+            512
+          ],
+          "dtype": "float32",
+          "device": "cuda:0",
+          "contiguous": false,
+          "storage_offset": 0
+        }
+      },
+      {
+        "op": "view",
+        "overload": "aten.view.default",
+        "inputs": [
+          {
+            "shape": [
+              1,
+              128,
+              512
+            ],
+            "stride": [
+              65536,
+              512,
+              1
+            ],
+            "dtype": "float32",
+            "device": "cuda:0",
+            "contiguous": true,
+            "storage_offset": 0
+          }
+        ],
+        "output": {
+          "shape": [
+            128,
+            512
+          ],
+          "stride": [
+            512,
+            1
+          ],
+          "dtype": "float32",
+          "device": "cuda:0",
+          "contiguous": true,
+          "storage_offset": 0
+        }
+      },
+      {
+        "op": "mm",
+        "overload": "aten.mm.default",
+        "inputs": [
+          {
+            "shape": [
+              128,
+              512
+            ],
+            "stride": [
+              512,
+              1
+            ],
+            "dtype": "float32",
+            "device": "cuda:0",
+            "contiguous": true,
+            "storage_offset": 0
+          },
+          {
+            "shape": [
+              512,
+              1408
+            ],
+            "stride": [
+              1,
+              512
+            ],
+            "dtype": "float32",
+            "device": "cuda:0",
+            "contiguous": false,
+            "storage_offset": 0
+          }
+        ],
+        "output": {
+          "shape": [
+            128,
+            1408
+          ],
+          "stride": [
+            1408,
+            1
+          ],
+          "dtype": "float32",
+          "device": "cuda:0",
+          "contiguous": true,
+          "storage_offset": 0
+        }
+      },
+      {
+        "op": "_unsafe_view",
+        "overload": "aten._unsafe_view.default",
+        "inputs": [
+          {
+            "shape": [
+              128,
+              1408
+            ],
+            "stride": [
+              1408,
+              1
+            ],
+            "dtype": "float32",
+            "device": "cuda:0",
+            "contiguous": true,
+            "storage_offset": 0
+          }
+        ],
+        "output": {
+          "shape": [
+            1,
+            128,
+            1408
+          ],
+          "stride": [
+            180224,
+            1408,
+            1
+          ],
+          "dtype": "float32",
+          "device": "cuda:0",
+          "contiguous": true,
+          "storage_offset": 0
+        }
+      }
+    ],
+    "profiler_tree": [
+      {
+        "name": "aten::linear",
+        "input_shapes": [
+          [
+            1,
+            128,
+            512
+          ],
+          [
+            1408,
+            512
+          ]
+        ],
+        "kernels": [],
+        "children": [
+          {
+            "name": "aten::t",
+            "input_shapes": [
+              [
+                1408,
+                512
+              ]
+            ],
+            "kernels": [],
+            "children": [
+              {
+                "name": "aten::transpose",
+                "input_shapes": [
+                  [
+                    1408,
+                    512
+                  ]
+                ],
+                "kernels": [],
+                "children": [
+                  {
+                    "name": "aten::as_strided",
+                    "input_shapes": [
+                      [
+                        1408,
+                        512
+                      ]
+                    ],
+                    "kernels": [],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "aten::matmul",
+            "input_shapes": [
+              [
+                1,
+                128,
+                512
+              ],
+              [
+                512,
+                1408
+              ]
+            ],
+            "kernels": [],
+            "children": [
+              {
+                "name": "aten::reshape",
+                "input_shapes": [
+                  [
+                    1,
+                    128,
+                    512
+                  ]
+                ],
+                "kernels": [],
+                "children": [
+                  {
+                    "name": "aten::view",
+                    "input_shapes": [
+                      [
+                        1,
+                        128,
+                        512
+                      ]
+                    ],
+                    "kernels": [],
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "aten::mm",
+                "input_shapes": [
+                  [
+                    128,
+                    512
+                  ],
+                  [
+                    512,
+                    1408
+                  ]
+                ],
+                "kernels": [
+                  "Memset (Device)",
+                  "ampere_sgemm_128x64_tn"
+                ],
+                "children": []
+              },
+              {
+                "name": "aten::_unsafe_view",
+                "input_shapes": [
+                  [
+                    128,
+                    1408
+                  ]
+                ],
+                "kernels": [],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "model_tensors": [
+    {
+      "phase": "prefill",
+      "layer": "blocks.0.q_proj",
+      "input": {
+        "shape": [
+          1,
+          128,
+          512
+        ],
+        "stride": [
+          65536,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          512,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 512] x [512, 512]"
+    },
+    {
+      "phase": "prefill",
+      "layer": "blocks.0.k_proj",
+      "input": {
+        "shape": [
+          1,
+          128,
+          512
+        ],
+        "stride": [
+          65536,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          128,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 512] x [512, 128]"
+    },
+    {
+      "phase": "prefill",
+      "layer": "blocks.0.v_proj",
+      "input": {
+        "shape": [
+          1,
+          128,
+          512
+        ],
+        "stride": [
+          65536,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          128,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 512] x [512, 128]"
+    },
+    {
+      "phase": "prefill",
+      "layer": "blocks.0.out_proj",
+      "input": {
+        "shape": [
+          1,
+          128,
+          512
+        ],
+        "stride": [
+          65536,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          512,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 512] x [512, 512]"
+    },
+    {
+      "phase": "prefill",
+      "layer": "blocks.0.gate_proj",
+      "input": {
+        "shape": [
+          1,
+          128,
+          512
+        ],
+        "stride": [
+          65536,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          1408,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 512] x [512, 1408]"
+    },
+    {
+      "phase": "prefill",
+      "layer": "blocks.0.up_proj",
+      "input": {
+        "shape": [
+          1,
+          128,
+          512
+        ],
+        "stride": [
+          65536,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          1408,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 512] x [512, 1408]"
+    },
+    {
+      "phase": "prefill",
+      "layer": "blocks.0.down_proj",
+      "input": {
+        "shape": [
+          1,
+          128,
+          1408
+        ],
+        "stride": [
+          180224,
+          1408,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          512,
+          1408
+        ],
+        "stride": [
+          1408,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 1408] x [1408, 512]"
+    },
+    {
+      "phase": "prefill",
+      "layer": "lm_head",
+      "input": {
+        "shape": [
+          1,
+          128,
+          512
+        ],
+        "stride": [
+          65536,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          15485,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[128, 512] x [512, 15485]"
+    },
+    {
+      "phase": "decode",
+      "layer": "blocks.0.q_proj",
+      "input": {
+        "shape": [
+          1,
+          1,
+          512
+        ],
+        "stride": [
+          512,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          512,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 512] x [512, 512]"
+    },
+    {
+      "phase": "decode",
+      "layer": "blocks.0.k_proj",
+      "input": {
+        "shape": [
+          1,
+          1,
+          512
+        ],
+        "stride": [
+          512,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          128,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 512] x [512, 128]"
+    },
+    {
+      "phase": "decode",
+      "layer": "blocks.0.v_proj",
+      "input": {
+        "shape": [
+          1,
+          1,
+          512
+        ],
+        "stride": [
+          512,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          128,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 512] x [512, 128]"
+    },
+    {
+      "phase": "decode",
+      "layer": "blocks.0.out_proj",
+      "input": {
+        "shape": [
+          1,
+          1,
+          512
+        ],
+        "stride": [
+          512,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          512,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 512] x [512, 512]"
+    },
+    {
+      "phase": "decode",
+      "layer": "blocks.0.gate_proj",
+      "input": {
+        "shape": [
+          1,
+          1,
+          512
+        ],
+        "stride": [
+          512,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          1408,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 512] x [512, 1408]"
+    },
+    {
+      "phase": "decode",
+      "layer": "blocks.0.up_proj",
+      "input": {
+        "shape": [
+          1,
+          1,
+          512
+        ],
+        "stride": [
+          512,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          1408,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 512] x [512, 1408]"
+    },
+    {
+      "phase": "decode",
+      "layer": "blocks.0.down_proj",
+      "input": {
+        "shape": [
+          1,
+          1,
+          1408
+        ],
+        "stride": [
+          1408,
+          1408,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          512,
+          1408
+        ],
+        "stride": [
+          1408,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 1408] x [1408, 512]"
+    },
+    {
+      "phase": "decode",
+      "layer": "lm_head",
+      "input": {
+        "shape": [
+          1,
+          1,
+          512
+        ],
+        "stride": [
+          512,
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "weight": {
+        "shape": [
+          15485,
+          512
+        ],
+        "stride": [
+          512,
+          1
+        ],
+        "dtype": "float32",
+        "device": "cuda:0",
+        "contiguous": true,
+        "storage_offset": 0
+      },
+      "mm_operands": "[1, 512] x [512, 15485]"
+    }
+  ],
+  "layer_table": [
+    {
+      "name": "q_proj",
+      "K": 512,
+      "N": 512,
+      "count": 8,
+      "module": "attention.q_proj",
+      "prefill": {
+        "M": 128,
+        "K": 512,
+        "N": 512,
+        "flops": 67108864,
+        "bytes": 1572864,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 42.666666666666664
+      },
+      "decode": {
+        "M": 1,
+        "K": 512,
+        "N": 512,
+        "flops": 524288,
+        "bytes": 1052672,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.4980544747081712
+      }
+    },
+    {
+      "name": "k_proj/v_proj",
+      "K": 512,
+      "N": 128,
+      "count": 16,
+      "module": "attention.k_proj, attention.v_proj",
+      "prefill": {
+        "M": 128,
+        "K": 512,
+        "N": 128,
+        "flops": 16777216,
+        "bytes": 589824,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 28.444444444444443
+      },
+      "decode": {
+        "M": 1,
+        "K": 512,
+        "N": 128,
+        "flops": 131072,
+        "bytes": 264704,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 0.4951644100580271
+      }
+    },
+    {
+      "name": "out_proj",
+      "K": 512,
+      "N": 512,
+      "count": 8,
+      "module": "attention.out_proj",
+      "prefill": {
+        "M": 128,
+        "K": 512,
+        "N": 512,
+        "flops": 67108864,
+        "bytes": 1572864,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 42.666666666666664
+      },
+      "decode": {
+        "M": 1,
+        "K": 512,
+        "N": 512,
+        "flops": 524288,
+        "bytes": 1052672,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.4980544747081712
+      }
+    },
+    {
+      "name": "gate_proj/up_proj",
+      "K": 512,
+      "N": 1408,
+      "count": 16,
+      "module": "ffn.gate_proj, ffn.up_proj",
+      "prefill": {
+        "M": 128,
+        "K": 512,
+        "N": 1408,
+        "flops": 184549376,
+        "bytes": 3866624,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 47.728813559322035
+      },
+      "decode": {
+        "M": 1,
+        "K": 512,
+        "N": 1408,
+        "flops": 1441792,
+        "bytes": 2891264,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.4986718611652205
+      }
+    },
+    {
+      "name": "down_proj",
+      "K": 1408,
+      "N": 512,
+      "count": 8,
+      "module": "ffn.down_proj",
+      "prefill": {
+        "M": 128,
+        "K": 1408,
+        "N": 512,
+        "flops": 184549376,
+        "bytes": 3866624,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 47.728813559322035
+      },
+      "decode": {
+        "M": 1,
+        "K": 1408,
+        "N": 512,
+        "flops": 1441792,
+        "bytes": 2891264,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.4986718611652205
+      }
+    },
+    {
+      "name": "lm_head",
+      "K": 512,
+      "N": 15485,
+      "count": 1,
+      "module": "x @ token_embedding.weight.T (tied)",
+      "prefill": {
+        "M": 128,
+        "K": 512,
+        "N": 15485,
+        "flops": 2029649920,
+        "bytes": 39903744,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 50.86364627840435
+      },
+      "decode": {
+        "M": 1,
+        "K": 512,
+        "N": 15485,
+        "flops": 15856640,
+        "bytes": 31777268,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 0.498993179652826
+      }
+    }
+  ],
+  "roofline": {
+    "peak_fp32_tflops": 2.864774961890835,
+    "peak_fp32_kernel": "ampere_sgemm_128x64_tn",
+    "peak_tf32_tflops": 5.970454265980467,
+    "peak_tf32_kernel": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_128x256_16x3_tn_align4>(cutlass_80_tensorop_s1688gemm_128x256_16x3_tn_align4::Params)",
+    "dram_bandwidth_gbs": 111.04462264694897,
+    "ridge_point_fp32": 25.798412328339314,
+    "tiny_kernel_wall_us": 4.586159000155021,
+    "peak_fp32_source": "M sweep, [256,512]x[512,1408]"
+  },
+  "m_sweep": {
+    "q_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 512,
+        "flops": 524288,
+        "bytes": 1052672,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.4980544747081712,
+        "wall_us": 9.834525000087524,
+        "stream_us": 9.710720181465149,
+        "kernel_us": 10.12460000000001,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 5, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 10.12460000000001,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.051783576635126276,
+        "gbs": 103.97171246271448,
+        "gpu_busy_fraction": 1.0294955780690886
+      },
+      {
+        "M": 2,
+        "K": 512,
+        "N": 512,
+        "flops": 1048576,
+        "bytes": 1056768,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.9922480620155039,
+        "wall_us": 9.218449999934819,
+        "stream_us": 8.983039855957031,
+        "kernel_us": 4.7872000000000074,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 2, 2, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 4.7872000000000074,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.2190374331550799,
+        "gbs": 220.74866310160394,
+        "gpu_busy_fraction": 0.5193063909913116
+      },
+      {
+        "M": 4,
+        "K": 512,
+        "N": 512,
+        "flops": 2097152,
+        "bytes": 1064960,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 1.9692307692307693,
+        "wall_us": 14.748334999694634,
+        "stream_us": 14.46895956993103,
+        "kernel_us": 5.878399999999919,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 4, 4, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 5.878399999999919,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.3567555797495966,
+        "gbs": 181.16494284159205,
+        "gpu_busy_fraction": 0.39858058554552983
+      },
+      {
+        "M": 8,
+        "K": 512,
+        "N": 512,
+        "flops": 4194304,
+        "bytes": 1081344,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 3.878787878787879,
+        "wall_us": 13.094764999550534,
+        "stream_us": 12.802400588989258,
+        "kernel_us": 10.230299999999966,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 10.230299999999966,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.4099883678875511,
+        "gbs": 105.70012609600927,
+        "gpu_busy_fraction": 0.7812511335904929
+      },
+      {
+        "M": 16,
+        "K": 512,
+        "N": 512,
+        "flops": 8388608,
+        "bytes": 1114112,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 7.529411764705882,
+        "wall_us": 17.230244999382194,
+        "stream_us": 16.90592050552368,
+        "kernel_us": 16.438200000000005,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 16.438200000000005,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.5103118346290956,
+        "gbs": 67.77579053667674,
+        "gpu_busy_fraction": 0.9540317041684209
+      },
+      {
+        "M": 32,
+        "K": 512,
+        "N": 512,
+        "flops": 16777216,
+        "bytes": 1179648,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 14.222222222222221,
+        "wall_us": 18.16362499994284,
+        "stream_us": 17.817280292510986,
+        "kernel_us": 16.860300000000027,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 14.303600000000028,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 2.5567000000000006,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 2.5567000000000006,
+        "memset": false,
+        "ctas": 4,
+        "tflops": 0.9950722110519964,
+        "gbs": 69.96601483959348,
+        "gpu_busy_fraction": 0.9282453254817299
+      },
+      {
+        "M": 64,
+        "K": 512,
+        "N": 512,
+        "flops": 33554432,
+        "bytes": 1310720,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 25.6,
+        "wall_us": 24.5336550005959,
+        "stream_us": 24.29647922515869,
+        "kernel_us": 23.718099999999957,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_32x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 20.8221,
+            "short": "ampere_sgemm_32x32_sliced1x4_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 2.895999999999958,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_32x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 2.895999999999958,
+        "memset": false,
+        "ctas": 32,
+        "tflops": 1.4147183796341218,
+        "gbs": 55.262436704457876,
+        "gpu_busy_fraction": 0.9667577048517176
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 512,
+        "flops": 67108864,
+        "bytes": 1572864,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 42.666666666666664,
+        "wall_us": 53.2295300001806,
+        "stream_us": 52.87263870239258,
+        "kernel_us": 52.05969999999998,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 34.68729999999996,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 17.372400000000017,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 17.372400000000017,
+        "memset": false,
+        "ctas": 8,
+        "tflops": 1.2890751195262369,
+        "gbs": 30.212698113896174,
+        "gpu_busy_fraction": 0.9780229132179703
+      },
+      {
+        "M": 256,
+        "K": 512,
+        "N": 512,
+        "flops": 134217728,
+        "bytes": 2097152,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 64.0,
+        "wall_us": 54.138410000632575,
+        "stream_us": 53.69311809539795,
+        "kernel_us": 51.797699999999914,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 51.42319999999997,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.3744999999999436,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 32,
+        "tflops": 2.5911908829928785,
+        "gbs": 40.487357546763725,
+        "gpu_busy_fraction": 0.9567643379145174
+      },
+      {
+        "M": 512,
+        "K": 512,
+        "N": 512,
+        "flops": 268435456,
+        "bytes": 3145728,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 85.33333333333333,
+        "wall_us": 94.17139999982282,
+        "stream_us": 93.65856170654297,
+        "kernel_us": 100.15579999999994,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 99.57649999999998,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.5792999999999665,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 32,
+        "tflops": 2.6801788413651546,
+        "gbs": 31.408345797247907,
+        "gpu_busy_fraction": 1.0635479561755308
+      }
+    ],
+    "k_proj/v_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 128,
+        "flops": 131072,
+        "bytes": 264704,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 0.4951644100580271,
+        "wall_us": 9.122835000425766,
+        "stream_us": 8.956800103187561,
+        "kernel_us": 4.166300000000047,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemv2T_kernel_val<int, int, float, float, float, float, 128, 16, 2, 2, false, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>, float, float)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 4.166300000000047,
+            "short": "gemv2T_kernel_val"
+          }
+        ],
+        "main_kernel": "gemv2T_kernel_val",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.03146004848426626,
+        "gbs": 63.534551040490854,
+        "gpu_busy_fraction": 0.45668917609554527
+      },
+      {
+        "M": 2,
+        "K": 512,
+        "N": 128,
+        "flops": 262144,
+        "bytes": 267264,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 0.9808429118773946,
+        "wall_us": 10.111279999591716,
+        "stream_us": 9.90336000919342,
+        "kernel_us": 3.8657000000000608,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 2, 2, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 3.8657000000000608,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.06781281527278266,
+        "gbs": 69.13728432107919,
+        "gpu_busy_fraction": 0.3823155921066526
+      },
+      {
+        "M": 4,
+        "K": 512,
+        "N": 128,
+        "flops": 524288,
+        "bytes": 272384,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 1.9248120300751879,
+        "wall_us": 13.235814999461581,
+        "stream_us": 12.944159507751465,
+        "kernel_us": 4.6364999999999785,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 4, 4, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 4.6364999999999785,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.11307839965491265,
+        "gbs": 58.74776232071633,
+        "gpu_busy_fraction": 0.3502995471142945
+      },
+      {
+        "M": 8,
+        "K": 512,
+        "N": 128,
+        "flops": 1048576,
+        "bytes": 282624,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 3.710144927536232,
+        "wall_us": 15.250719999357898,
+        "stream_us": 14.95568037033081,
+        "kernel_us": 4.691299999999967,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 4.691299999999967,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.22351501715942432,
+        "gbs": 60.24428196875108,
+        "gpu_busy_fraction": 0.30761170621436135
+      },
+      {
+        "M": 16,
+        "K": 512,
+        "N": 128,
+        "flops": 2097152,
+        "bytes": 303104,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 6.918918918918919,
+        "wall_us": 10.7577350001975,
+        "stream_us": 10.496000051498413,
+        "kernel_us": 6.412699999999996,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 6.412699999999996,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.32703104776459235,
+        "gbs": 47.266206122226244,
+        "gpu_busy_fraction": 0.5961013168554781
+      },
+      {
+        "M": 32,
+        "K": 512,
+        "N": 128,
+        "flops": 4194304,
+        "bytes": 344064,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 12.19047619047619,
+        "wall_us": 10.428174999788098,
+        "stream_us": 10.261600017547607,
+        "kernel_us": 9.398099999999989,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_64x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 7.9485000000000126,
+            "short": "ampere_sgemm_64x32_sliced1x4_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 1.4495999999999754,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_64x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 1.4495999999999754,
+        "memset": false,
+        "ctas": 2,
+        "tflops": 0.4462927613028171,
+        "gbs": 36.60995307562171,
+        "gpu_busy_fraction": 0.9012219300300349
+      },
+      {
+        "M": 64,
+        "K": 512,
+        "N": 128,
+        "flops": 8388608,
+        "bytes": 425984,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 19.692307692307693,
+        "wall_us": 11.806385000454611,
+        "stream_us": 11.646080017089844,
+        "kernel_us": 9.67009999999999,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_64x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 8.166199999999993,
+            "short": "ampere_sgemm_64x32_sliced1x4_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 1.5038999999999987,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_64x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 1.5038999999999987,
+        "memset": false,
+        "ctas": 4,
+        "tflops": 0.8674789298973132,
+        "gbs": 44.051664408847934,
+        "gpu_busy_fraction": 0.8190568069419758
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 128,
+        "flops": 16777216,
+        "bytes": 589824,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 28.444444444444443,
+        "wall_us": 13.193050000381845,
+        "stream_us": 13.037919998168945,
+        "kernel_us": 12.361500000000023,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_32x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 10.755200000000013,
+            "short": "ampere_sgemm_32x32_sliced1x4_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 1.6063000000000103,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_32x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 1.6063000000000103,
+        "memset": false,
+        "ctas": 16,
+        "tflops": 1.357215224689558,
+        "gbs": 47.71459774299227,
+        "gpu_busy_fraction": 0.9369706019186045
+      },
+      {
+        "M": 256,
+        "K": 512,
+        "N": 128,
+        "flops": 33554432,
+        "bytes": 917504,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 36.57142857142857,
+        "wall_us": 23.0230750003102,
+        "stream_us": 22.819840908050537,
+        "kernel_us": 22.345500000000015,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_32x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 19.830100000000016,
+            "short": "ampere_sgemm_32x32_sliced1x4_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 2.5153999999999996,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_32x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 2.5153999999999996,
+        "memset": false,
+        "ctas": 32,
+        "tflops": 1.5016192074466885,
+        "gbs": 41.059900203620394,
+        "gpu_busy_fraction": 0.9705697436028395
+      },
+      {
+        "M": 512,
+        "K": 512,
+        "N": 128,
+        "flops": 67108864,
+        "bytes": 1572864,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 42.666666666666664,
+        "wall_us": 28.615759999865986,
+        "stream_us": 28.392159938812256,
+        "kernel_us": 27.28549999999998,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_32x128_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 26.901699999999984,
+            "short": "ampere_sgemm_32x128_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.38379999999999653,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_32x128_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 16,
+        "tflops": 2.4595064777995654,
+        "gbs": 57.644683073427316,
+        "gpu_busy_fraction": 0.9535130291883831
+      }
+    ],
+    "out_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 512,
+        "flops": 524288,
+        "bytes": 1052672,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.4980544747081712,
+        "wall_us": 14.419469999893408,
+        "stream_us": 14.132319688796997,
+        "kernel_us": 4.175999999999976,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 5, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 4.175999999999976,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.12554789272030722,
+        "gbs": 252.0766283524919,
+        "gpu_busy_fraction": 0.289608425277132
+      },
+      {
+        "M": 2,
+        "K": 512,
+        "N": 512,
+        "flops": 1048576,
+        "bytes": 1056768,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.9922480620155039,
+        "wall_us": 11.695185000917263,
+        "stream_us": 11.404800415039062,
+        "kernel_us": 5.186899999999992,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 2, 2, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 5.186899999999992,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.20215851471977514,
+        "gbs": 203.73787811602338,
+        "gpu_busy_fraction": 0.4435073066046564
+      },
+      {
+        "M": 4,
+        "K": 512,
+        "N": 512,
+        "flops": 2097152,
+        "bytes": 1064960,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 1.9692307692307693,
+        "wall_us": 12.427610000713685,
+        "stream_us": 12.044320106506348,
+        "kernel_us": 5.871999999999957,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 4, 4, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 5.871999999999957,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.35714441416893994,
+        "gbs": 181.36239782016483,
+        "gpu_busy_fraction": 0.47249632066525615
+      },
+      {
+        "M": 8,
+        "K": 512,
+        "N": 512,
+        "flops": 4194304,
+        "bytes": 1081344,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 3.878787878787879,
+        "wall_us": 12.10319499932666,
+        "stream_us": 11.904319524765015,
+        "kernel_us": 10.226999999999999,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 10.226999999999999,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.41012066099540434,
+        "gbs": 105.73423291287769,
+        "gpu_busy_fraction": 0.8449834940748256
+      },
+      {
+        "M": 16,
+        "K": 512,
+        "N": 512,
+        "flops": 8388608,
+        "bytes": 1114112,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 7.529411764705882,
+        "wall_us": 17.048615000021528,
+        "stream_us": 16.72752022743225,
+        "kernel_us": 16.492599999999992,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 16.492599999999992,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.5086285970677761,
+        "gbs": 67.552235548064,
+        "gpu_busy_fraction": 0.9673865003098003
+      },
+      {
+        "M": 32,
+        "K": 512,
+        "N": 512,
+        "flops": 16777216,
+        "bytes": 1179648,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 14.222222222222221,
+        "wall_us": 25.17400499982614,
+        "stream_us": 24.911038875579834,
+        "kernel_us": 16.44100000000001,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 14.057000000000016,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 2.383999999999992,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 2.383999999999992,
+        "memset": false,
+        "ctas": 4,
+        "tflops": 1.0204498509823,
+        "gbs": 71.75038014719296,
+        "gpu_busy_fraction": 0.6530943328291846
+      },
+      {
+        "M": 64,
+        "K": 512,
+        "N": 512,
+        "flops": 33554432,
+        "bytes": 1310720,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 25.6,
+        "wall_us": 25.308225000344464,
+        "stream_us": 25.04080057144165,
+        "kernel_us": 25.2702,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_32x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 22.434899999999992,
+            "short": "ampere_sgemm_32x32_sliced1x4_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 2.8353000000000064,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_32x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 2.8353000000000064,
+        "memset": false,
+        "ctas": 32,
+        "tflops": 1.3278261351314988,
+        "gbs": 51.86820840357417,
+        "gpu_busy_fraction": 0.9984975240126897
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 512,
+        "flops": 67108864,
+        "bytes": 1572864,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 42.666666666666664,
+        "wall_us": 53.36037999995824,
+        "stream_us": 52.91935920715332,
+        "kernel_us": 51.897000000000006,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 34.399599999999964,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 17.497400000000038,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 17.497400000000038,
+        "memset": false,
+        "ctas": 8,
+        "tflops": 1.293116442183556,
+        "gbs": 30.30741661367709,
+        "gpu_busy_fraction": 0.9725755326337747
+      },
+      {
+        "M": 256,
+        "K": 512,
+        "N": 512,
+        "flops": 134217728,
+        "bytes": 2097152,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 64.0,
+        "wall_us": 53.50442500002828,
+        "stream_us": 53.18592071533203,
+        "kernel_us": 51.44929999999998,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 50.99799999999999,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.451299999999992,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 32,
+        "tflops": 2.6087376893368823,
+        "gbs": 40.76152639588879,
+        "gpu_busy_fraction": 0.9615896255304639
+      },
+      {
+        "M": 512,
+        "K": 512,
+        "N": 512,
+        "flops": 268435456,
+        "bytes": 3145728,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 85.33333333333333,
+        "wall_us": 92.84401000059006,
+        "stream_us": 92.35759735107422,
+        "kernel_us": 94.16500000000015,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 93.41310000000003,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.7519000000001143,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 32,
+        "tflops": 2.8506924653533647,
+        "gbs": 33.406552328359744,
+        "gpu_busy_fraction": 1.0142280584326517
+      }
+    ],
+    "gate_proj/up_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 1408,
+        "flops": 1441792,
+        "bytes": 2891264,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.4986718611652205,
+        "wall_us": 28.50354999964111,
+        "stream_us": 28.255999088287354,
+        "kernel_us": 27.69220000000005,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 5, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 27.69220000000005,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.05206491358577496,
+        "gbs": 104.40716158340598,
+        "gpu_busy_fraction": 0.9715351245844368
+      },
+      {
+        "M": 2,
+        "K": 512,
+        "N": 1408,
+        "flops": 2883584,
+        "bytes": 2898944,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.9947015188979159,
+        "wall_us": 29.767715000161843,
+        "stream_us": 29.56415891647339,
+        "kernel_us": 29.193200000000026,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 2, 2, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 29.193200000000026,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.0987758793143608,
+        "gbs": 99.30202923968587,
+        "gpu_busy_fraction": 0.9807000638054115
+      },
+      {
+        "M": 4,
+        "K": 512,
+        "N": 1408,
+        "flops": 5767168,
+        "bytes": 2914304,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 1.9789177793394237,
+        "wall_us": 29.61533999950916,
+        "stream_us": 29.319839477539062,
+        "kernel_us": 28.866999999999983,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 4, 4, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 28.866999999999983,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.19978411334742105,
+        "gbs": 100.95624761838783,
+        "gpu_busy_fraction": 0.9747313385724568
+      },
+      {
+        "M": 8,
+        "K": 512,
+        "N": 1408,
+        "flops": 11534336,
+        "bytes": 2945024,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 3.9165507649513214,
+        "wall_us": 31.143969999902765,
+        "stream_us": 30.944640636444092,
+        "kernel_us": 30.063500000000023,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 30.063500000000023,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.3836657741114638,
+        "gbs": 97.96011775076082,
+        "gpu_busy_fraction": 0.9653072488861851
+      },
+      {
+        "M": 16,
+        "K": 512,
+        "N": 1408,
+        "flops": 23068672,
+        "bytes": 3006464,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 7.6730245231607626,
+        "wall_us": 56.44286500000817,
+        "stream_us": 56.2286376953125,
+        "kernel_us": 55.861400000000025,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 55.861400000000025,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.4129626539972144,
+        "gbs": 53.820061795801735,
+        "gpu_busy_fraction": 0.9896981664554402
+      },
+      {
+        "M": 32,
+        "K": 512,
+        "N": 1408,
+        "flops": 46137344,
+        "bytes": 3129344,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 14.743455497382199,
+        "wall_us": 41.000429999940025,
+        "stream_us": 40.823678970336914,
+        "kernel_us": 40.00299999999993,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_64x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 39.38849999999995,
+            "short": "ampere_sgemm_64x32_sliced1x4_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.6144999999999754,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_64x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 22,
+        "tflops": 1.1533470989675796,
+        "gbs": 78.22773292003114,
+        "gpu_busy_fraction": 0.9756726941658526
+      },
+      {
+        "M": 64,
+        "K": 512,
+        "N": 1408,
+        "flops": 92274688,
+        "bytes": 3375104,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 27.339805825242717,
+        "wall_us": 52.65336999968895,
+        "stream_us": 52.41136074066162,
+        "kernel_us": 51.93839999999998,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 51.269499999999994,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.6688999999999851,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 22,
+        "tflops": 1.7766178395945975,
+        "gbs": 64.98282580903535,
+        "gpu_busy_fraction": 0.9864211920396891
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 1408,
+        "flops": 184549376,
+        "bytes": 3866624,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 47.728813559322035,
+        "wall_us": 72.56618000042181,
+        "stream_us": 72.32192039489746,
+        "kernel_us": 76.18130000000004,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 75.45489999999998,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.7264000000000579,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 22,
+        "tflops": 2.422502320123179,
+        "gbs": 50.755552871898985,
+        "gpu_busy_fraction": 1.0498182486601502
+      },
+      {
+        "M": 256,
+        "K": 512,
+        "N": 1408,
+        "flops": 369098752,
+        "bytes": 4849664,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 76.10810810810811,
+        "wall_us": 129.75414000038654,
+        "stream_us": 129.54463958740234,
+        "kernel_us": 128.84040000000002,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 128.07549999999998,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.7649000000000342,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 44,
+        "tflops": 2.864774961890835,
+        "gbs": 37.64086420098043,
+        "gpu_busy_fraction": 0.9929579125538206
+      },
+      {
+        "M": 512,
+        "K": 512,
+        "N": 1408,
+        "flops": 738197504,
+        "bytes": 6815744,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 108.3076923076923,
+        "wall_us": 254.75359499978367,
+        "stream_us": 254.4980812072754,
+        "kernel_us": 308.3955000000001,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 307.31730000000005,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 1.0782000000000154,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 88,
+        "tflops": 2.3936714511074246,
+        "gbs": 22.100659704827077,
+        "gpu_busy_fraction": 1.2105638784028228
+      }
+    ],
+    "down_proj": [
+      {
+        "M": 1,
+        "K": 1408,
+        "N": 512,
+        "flops": 1441792,
+        "bytes": 2891264,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.4986718611652205,
+        "wall_us": 30.036079999717913,
+        "stream_us": 29.699039459228516,
+        "kernel_us": 29.414600000000064,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 9, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 29.414600000000064,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.04901620283804631,
+        "gbs": 98.29350050655097,
+        "gpu_busy_fraction": 0.9793088845240895
+      },
+      {
+        "M": 2,
+        "K": 1408,
+        "N": 512,
+        "flops": 2883584,
+        "bytes": 2898944,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.9947015188979159,
+        "wall_us": 37.61158500083184,
+        "stream_us": 37.25744009017944,
+        "kernel_us": 33.86789999999996,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 2, 2, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 33.86789999999996,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.08514209620318955,
+        "gbs": 85.5956229940446,
+        "gpu_busy_fraction": 0.9004645775829687
+      },
+      {
+        "M": 4,
+        "K": 1408,
+        "N": 512,
+        "flops": 5767168,
+        "bytes": 2914304,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 1.9789177793394237,
+        "wall_us": 35.23666499972933,
+        "stream_us": 35.043840408325195,
+        "kernel_us": 33.574499999999965,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 4, 4, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 33.574499999999965,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.17177226764359876,
+        "gbs": 86.80111394063957,
+        "gpu_busy_fraction": 0.9528285381223753
+      },
+      {
+        "M": 8,
+        "K": 1408,
+        "N": 512,
+        "flops": 11534336,
+        "bytes": 2945024,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 3.9165507649513214,
+        "wall_us": 35.122990000218124,
+        "stream_us": 34.92687940597534,
+        "kernel_us": 34.87339999999997,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 34.87339999999997,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.33074882288506463,
+        "gbs": 84.44900697953177,
+        "gpu_busy_fraction": 0.9928938282242883
+      },
+      {
+        "M": 16,
+        "K": 1408,
+        "N": 512,
+        "flops": 23068672,
+        "bytes": 3006464,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 7.6730245231607626,
+        "wall_us": 43.13622500035308,
+        "stream_us": 42.92863845825195,
+        "kernel_us": 43.60609999999997,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_64x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 40.722799999999985,
+            "short": "ampere_sgemm_64x32_sliced1x4_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 2.8832999999999855,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_64x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 2.8832999999999855,
+        "memset": false,
+        "ctas": 8,
+        "tflops": 0.5290239668303292,
+        "gbs": 68.94595022256065,
+        "gpu_busy_fraction": 1.01089281687591
+      },
+      {
+        "M": 32,
+        "K": 1408,
+        "N": 512,
+        "flops": 46137344,
+        "bytes": 3129344,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 14.743455497382199,
+        "wall_us": 89.84985499978393,
+        "stream_us": 89.43872451782227,
+        "kernel_us": 88.17560000000002,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 79.19000000000001,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 8.9856,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 8.9856,
+        "memset": false,
+        "ctas": 4,
+        "tflops": 0.5232438906001206,
+        "gbs": 35.48990877294852,
+        "gpu_busy_fraction": 0.9813660801145652
+      },
+      {
+        "M": 64,
+        "K": 1408,
+        "N": 512,
+        "flops": 92274688,
+        "bytes": 3375104,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 27.339805825242717,
+        "wall_us": 57.58921500046199,
+        "stream_us": 57.233757972717285,
+        "kernel_us": 57.08420000000005,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 51.01710000000003,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 6.0671000000000275,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 6.0671000000000275,
+        "memset": false,
+        "ctas": 4,
+        "tflops": 1.6164663427007808,
+        "gbs": 59.12501182463794,
+        "gpu_busy_fraction": 0.991230736511031
+      },
+      {
+        "M": 128,
+        "K": 1408,
+        "N": 512,
+        "flops": 184549376,
+        "bytes": 3866624,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 47.728813559322035,
+        "wall_us": 82.74305499980983,
+        "stream_us": 81.88159942626953,
+        "kernel_us": 79.48639999999993,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 61.710699999999974,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 17.77569999999996,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 17.77569999999996,
+        "memset": false,
+        "ctas": 8,
+        "tflops": 2.32177298254796,
+        "gbs": 48.645101551963656,
+        "gpu_busy_fraction": 0.9606413492973231
+      },
+      {
+        "M": 256,
+        "K": 1408,
+        "N": 512,
+        "flops": 369098752,
+        "bytes": 4849664,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 76.10810810810811,
+        "wall_us": 156.39742999951523,
+        "stream_us": 155.9000015258789,
+        "kernel_us": 154.67260000000007,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 153.90800000000004,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.7646000000000412,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 32,
+        "tflops": 2.386322800547737,
+        "gbs": 31.35438338787864,
+        "gpu_busy_fraction": 0.9889714939719886
+      },
+      {
+        "M": 512,
+        "K": 1408,
+        "N": 512,
+        "flops": 738197504,
+        "bytes": 6815744,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 108.3076923076923,
+        "wall_us": 298.6562650005453,
+        "stream_us": 298.22208404541016,
+        "kernel_us": 328.92369999999994,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 327.9606,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.9630999999999403,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 32,
+        "tflops": 2.244281892730746,
+        "gbs": 20.721352702769675,
+        "gpu_busy_fraction": 1.1013453878136437
+      }
+    ],
+    "lm_head": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 15485,
+        "flops": 15856640,
+        "bytes": 31777268,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 0.498993179652826,
+        "wall_us": 278.85906500046076,
+        "stream_us": 278.6235237121582,
+        "kernel_us": 278.1544,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemv2T_kernel_val<int, int, float, float, float, float, 128, 16, 4, 4, false, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>, float, float)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 278.1544,
+            "short": "gemv2T_kernel_val"
+          }
+        ],
+        "main_kernel": "gemv2T_kernel_val",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.0570066121549758,
+        "gbs": 114.2432692058799,
+        "gpu_busy_fraction": 0.9974730425189527
+      },
+      {
+        "M": 2,
+        "K": 512,
+        "N": 15485,
+        "flops": 31713280,
+        "bytes": 31841256,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 0.9959808118121973,
+        "wall_us": 280.5712200006383,
+        "stream_us": 280.29808044433594,
+        "kernel_us": 280.64149999999995,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 2, 2, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 280.64149999999995,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.11300281676088536,
+        "gbs": 113.45882914679407,
+        "gpu_busy_fraction": 1.0002504889823036
+      },
+      {
+        "M": 4,
+        "K": 512,
+        "N": 15485,
+        "flops": 63426560,
+        "bytes": 31969232,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 1.9839876040813242,
+        "wall_us": 283.74426999903335,
+        "stream_us": 283.50255966186523,
+        "kernel_us": 284.8231,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 4, 4, true, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 284.8231,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.22268755588995418,
+        "gbs": 112.2424129222665,
+        "gpu_busy_fraction": 1.0038021208356749
+      },
+      {
+        "M": 8,
+        "K": 512,
+        "N": 15485,
+        "flops": 126853120,
+        "bytes": 32225184,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 3.936459137052561,
+        "wall_us": 471.14453000062895,
+        "stream_us": 470.8184051513672,
+        "kernel_us": 532.1293,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemmSN_TN_kernel<float, 128, 16, 2, 4, 8, 9, false, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float> >(cublasGemmSmallNParams<cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 532.1293,
+            "short": "gemmSN_TN_kernel"
+          }
+        ],
+        "main_kernel": "gemmSN_TN_kernel",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.23838777530198021,
+        "gbs": 60.55893558200987,
+        "gpu_busy_fraction": 1.129439622273211
+      },
+      {
+        "M": 16,
+        "K": 512,
+        "N": 15485,
+        "flops": 253706240,
+        "bytes": 32737088,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 7.749810856726169,
+        "wall_us": 339.33953499968084,
+        "stream_us": 338.8220977783203,
+        "kernel_us": 356.03290000000015,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_64x32_sliced1x4_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 354.76880000000006,
+            "short": "ampere_sgemm_64x32_sliced1x4_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 1.2641000000001212,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_64x32_sliced1x4_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 242,
+        "tflops": 0.712592122806628,
+        "gbs": 91.94961476874745,
+        "gpu_busy_fraction": 1.04919369327342
+      },
+      {
+        "M": 32,
+        "K": 512,
+        "N": 15485,
+        "flops": 507412480,
+        "bytes": 33760896,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 15.029591631691291,
+        "wall_us": 534.6202850000736,
+        "stream_us": 534.1326522827148,
+        "kernel_us": 534.7021000000001,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x32_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 533.6845000000001,
+            "short": "ampere_sgemm_128x32_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 1.0175999999999703,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x32_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 121,
+        "tflops": 0.9489629459095072,
+        "gbs": 63.13963607025294,
+        "gpu_busy_fraction": 1.0001530338489242
+      },
+      {
+        "M": 64,
+        "K": 512,
+        "N": 15485,
+        "flops": 1014824960,
+        "bytes": 35808512,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 28.340327573511015,
+        "wall_us": 648.0405499996778,
+        "stream_us": 647.6329803466797,
+        "kernel_us": 647.7741000000001,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 646.8397000000001,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 0.9343999999999596,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 121,
+        "tflops": 1.5666340472704912,
+        "gbs": 55.279320368011,
+        "gpu_busy_fraction": 0.9995888374582766
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 15485,
+        "flops": 2029649920,
+        "bytes": 39903744,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 50.86364627840435,
+        "wall_us": 924.1545849999966,
+        "stream_us": 923.7830352783203,
+        "kernel_us": 943.1650000000004,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 941.9264000000003,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 1.2386000000001105,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 242,
+        "tflops": 2.1519563597037625,
+        "gbs": 42.30833841374519,
+        "gpu_busy_fraction": 1.0205706007507434
+      },
+      {
+        "M": 256,
+        "K": 512,
+        "N": 15485,
+        "flops": 4059299840,
+        "bytes": 48094208,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 84.4030915323525,
+        "wall_us": 1758.0822100001114,
+        "stream_us": 1757.6063537597656,
+        "kernel_us": 1893.3959999999997,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 1891.8440999999998,
+            "short": "ampere_sgemm_128x64_tn"
+          },
+          {
+            "name": "Memset (Device)",
+            "category": "copy/cat",
+            "calls": 1.0,
+            "us": 1.5518999999999665,
+            "short": "Memset (Device)"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": true,
+        "ctas": 484,
+        "tflops": 2.1439254334539637,
+        "gbs": 25.401029684228767,
+        "gpu_busy_fraction": 1.0769667022567049
+      },
+      {
+        "M": 512,
+        "K": 512,
+        "N": 15485,
+        "flops": 8118599680,
+        "bytes": 64475136,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 125.9183025220761,
+        "wall_us": 3226.9233300007727,
+        "stream_us": 3226.4886474609375,
+        "kernel_us": 3078.6618000000003,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "ampere_sgemm_128x64_tn",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 3078.6618000000003,
+            "short": "ampere_sgemm_128x64_tn"
+          }
+        ],
+        "main_kernel": "ampere_sgemm_128x64_tn",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": 968,
+        "tflops": 2.6370547359245498,
+        "gbs": 20.942584859434703,
+        "gpu_busy_fraction": 0.9540548334004773
+      }
+    ]
+  },
+  "tf32_sweep": {
+    "q_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 512,
+        "flops": 524288,
+        "bytes": 1052672,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.4980544747081712,
+        "wall_us": 8.820855000521988,
+        "stream_us": 8.642719984054565,
+        "kernel_us": 8.134400000000028,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 5, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 8.134400000000028,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.06445318646734834,
+        "gbs": 129.40991345397282,
+        "gpu_busy_fraction": 0.9221781788181148
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 512,
+        "flops": 67108864,
+        "bytes": 1572864,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 42.666666666666664,
+        "wall_us": 38.40223499992135,
+        "stream_us": 38.09727907180786,
+        "kernel_us": 36.891900000000035,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4>(cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4::Params)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 28.56880000000001,
+            "short": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 8.323100000000021,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 8.323100000000021,
+        "memset": false,
+        "ctas": 16,
+        "tflops": 1.8190677086298062,
+        "gbs": 42.634399421011075,
+        "gpu_busy_fraction": 0.960670648468132
+      }
+    ],
+    "k_proj/v_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 128,
+        "flops": 131072,
+        "bytes": 264704,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 0.4951644100580271,
+        "wall_us": 10.26407000040308,
+        "stream_us": 9.934080243110657,
+        "kernel_us": 3.6543000000000005,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemv2T_kernel_val<int, int, float, float, float, float, 128, 16, 2, 2, false, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>, float, float)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 3.6543000000000005,
+            "short": "gemv2T_kernel_val"
+          }
+        ],
+        "main_kernel": "gemv2T_kernel_val",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.03586788167364474,
+        "gbs": 72.43630791122786,
+        "gpu_busy_fraction": 0.35602835910671815
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 128,
+        "flops": 16777216,
+        "bytes": 589824,
+        "weight_bytes": 262144,
+        "arithmetic_intensity": 28.444444444444443,
+        "wall_us": 16.440765000425017,
+        "stream_us": 16.086080074310303,
+        "kernel_us": 9.397799999999982,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4>(cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4::Params)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 7.061999999999989,
+            "short": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 2.3357999999999945,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 2.3357999999999945,
+        "memset": false,
+        "ctas": 4,
+        "tflops": 1.7852280320926208,
+        "gbs": 62.7619230032562,
+        "gpu_busy_fraction": 0.5716157368441819
+      }
+    ],
+    "out_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 512,
+        "flops": 524288,
+        "bytes": 1052672,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 0.4980544747081712,
+        "wall_us": 13.128909999977623,
+        "stream_us": 12.791039943695068,
+        "kernel_us": 4.240000000000021,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 5, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 4.240000000000021,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.12365283018867865,
+        "gbs": 248.27169811320636,
+        "gpu_busy_fraction": 0.3229514102851834
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 512,
+        "flops": 67108864,
+        "bytes": 1572864,
+        "weight_bytes": 1048576,
+        "arithmetic_intensity": 42.666666666666664,
+        "wall_us": 25.00820500017653,
+        "stream_us": 24.71695899963379,
+        "kernel_us": 23.029700000000027,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4>(cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4::Params)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 18.965800000000012,
+            "short": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 4.063900000000013,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 4.063900000000013,
+        "memset": false,
+        "ctas": 16,
+        "tflops": 2.91401381694073,
+        "gbs": 68.29719883454835,
+        "gpu_busy_fraction": 0.9208857652853318
+      }
+    ],
+    "gate_proj/up_proj": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 1408,
+        "flops": 1441792,
+        "bytes": 2891264,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.4986718611652205,
+        "wall_us": 27.733324999417164,
+        "stream_us": 27.477118968963623,
+        "kernel_us": 27.055699999999955,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 5, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 27.055699999999955,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.05328976888419085,
+        "gbs": 106.86339662252334,
+        "gpu_busy_fraction": 0.9755663989286734
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 1408,
+        "flops": 184549376,
+        "bytes": 3866624,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 47.728813559322035,
+        "wall_us": 70.34597000028953,
+        "stream_us": 69.82639789581299,
+        "kernel_us": 69.35820000000004,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4>(cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4::Params)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 49.80029999999999,
+            "short": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 19.55790000000004,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 19.55790000000004,
+        "memset": false,
+        "ctas": 44,
+        "tflops": 2.660815534428516,
+        "gbs": 55.748620927302,
+        "gpu_busy_fraction": 0.9859583996029136
+      }
+    ],
+    "down_proj": [
+      {
+        "M": 1,
+        "K": 1408,
+        "N": 512,
+        "flops": 1441792,
+        "bytes": 2891264,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 0.4986718611652205,
+        "wall_us": 27.724050000870193,
+        "stream_us": 27.372961044311523,
+        "kernel_us": 26.975499999999965,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, float, float, float, float, false, true, true, false, 9, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 26.975499999999965,
+            "short": "internal::gemvx::kernel"
+          }
+        ],
+        "main_kernel": "internal::gemvx::kernel",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.0534482029990177,
+        "gbs": 107.18110878389665,
+        "gpu_busy_fraction": 0.9729999765241105
+      },
+      {
+        "M": 128,
+        "K": 1408,
+        "N": 512,
+        "flops": 184549376,
+        "bytes": 3866624,
+        "weight_bytes": 2883584,
+        "arithmetic_intensity": 47.728813559322035,
+        "wall_us": 49.41142999996373,
+        "stream_us": 49.160637855529785,
+        "kernel_us": 48.341799999999964,
+        "kernel_count": 2.0,
+        "kernels": [
+          {
+            "name": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4>(cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4::Params)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 43.78819999999996,
+            "short": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4"
+          },
+          {
+            "name": "void cublasLt::splitKreduce_kernel<32, 16, int, float, float, float, float, false, float, float, float, true, false, false, false>(cublasLt::cublasSplitKParams<float>, float const*, float const*, float*, float*, float const*, float const*, float const*, float const*, float*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 4.553600000000006,
+            "short": "cublasLt::splitKreduce_kernel"
+          }
+        ],
+        "main_kernel": "cutlass_80_tensorop_s1688gemm_64x64_16x6_tn_align4",
+        "category": "gemm",
+        "split_k": true,
+        "split_k_us": 4.553600000000006,
+        "memset": false,
+        "ctas": 16,
+        "tflops": 3.8175942145306987,
+        "gbs": 79.98510605728382,
+        "gpu_busy_fraction": 0.9783525795556909
+      }
+    ],
+    "lm_head": [
+      {
+        "M": 1,
+        "K": 512,
+        "N": 15485,
+        "flops": 15856640,
+        "bytes": 31777268,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 0.498993179652826,
+        "wall_us": 277.45500500031994,
+        "stream_us": 277.2105598449707,
+        "kernel_us": 276.83090000000004,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void gemv2T_kernel_val<int, int, float, float, float, float, 128, 16, 4, 4, false, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float const>, cublasGemvTensorStridedBatched<float>, float>, float, float)",
+            "category": "gemv",
+            "calls": 1.0,
+            "us": 276.83090000000004,
+            "short": "gemv2T_kernel_val"
+          }
+        ],
+        "main_kernel": "gemv2T_kernel_val",
+        "category": "gemv",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": null,
+        "tflops": 0.05727915489202975,
+        "gbs": 114.78945450092456,
+        "gpu_busy_fraction": 0.9977506082461219
+      },
+      {
+        "M": 128,
+        "K": 512,
+        "N": 15485,
+        "flops": 2029649920,
+        "bytes": 39903744,
+        "weight_bytes": 31713280,
+        "arithmetic_intensity": 50.86364627840435,
+        "wall_us": 479.30436000001464,
+        "stream_us": 478.93951416015625,
+        "kernel_us": 495.89319999999987,
+        "kernel_count": 1.0,
+        "kernels": [
+          {
+            "name": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_128x128_32x3_tn_align1>(cutlass_80_tensorop_s1688gemm_128x128_32x3_tn_align1::Params)",
+            "category": "gemm",
+            "calls": 1.0,
+            "us": 495.89319999999987,
+            "short": "cutlass_80_tensorop_s1688gemm_128x128_32x3_tn_align1"
+          }
+        ],
+        "main_kernel": "cutlass_80_tensorop_s1688gemm_128x128_32x3_tn_align1",
+        "category": "gemm",
+        "split_k": false,
+        "split_k_us": 0,
+        "memset": false,
+        "ctas": 121,
+        "tflops": 4.0929174265749175,
+        "gbs": 80.46842344278973,
+        "gpu_busy_fraction": 1.0346102422268488
+      }
+    ]
+  },
+  "batching": [
+    {
+      "B": 1,
+      "K": 512,
+      "N": 1408,
+      "separate_wall_us": 29.171539999879315,
+      "separate_kernel_us": 27.7212,
+      "separate_kernel_count": 1.0,
+      "batched_wall_us": 28.52944999972351,
+      "batched_kernel_us": 27.2029,
+      "batched_kernel_count": 1.0,
+      "batched_kernel": "internal::gemvx::kernel",
+      "weight_reads_separate_bytes": 2883584,
+      "weight_reads_batched_bytes": 2883584,
+      "speedup_wall": 1.022506217265388,
+      "wall_us_per_token_batched": 28.52944999972351
+    },
+    {
+      "B": 2,
+      "K": 512,
+      "N": 1408,
+      "separate_wall_us": 56.7824700010533,
+      "separate_kernel_us": 54.07619999999997,
+      "separate_kernel_count": 2.0,
+      "batched_wall_us": 29.426400000147623,
+      "batched_kernel_us": 28.393400000000042,
+      "batched_kernel_count": 1.0,
+      "batched_kernel": "gemmSN_TN_kernel",
+      "weight_reads_separate_bytes": 5767168,
+      "weight_reads_batched_bytes": 2883584,
+      "speedup_wall": 1.9296437892765828,
+      "wall_us_per_token_batched": 14.713200000073812
+    },
+    {
+      "B": 4,
+      "K": 512,
+      "N": 1408,
+      "separate_wall_us": 111.80309999872406,
+      "separate_kernel_us": 108.36239999999994,
+      "separate_kernel_count": 4.0,
+      "batched_wall_us": 29.15987500045958,
+      "batched_kernel_us": 28.799699999999984,
+      "batched_kernel_count": 1.0,
+      "batched_kernel": "gemmSN_TN_kernel",
+      "weight_reads_separate_bytes": 11534336,
+      "weight_reads_batched_bytes": 2883584,
+      "speedup_wall": 3.834141950092789,
+      "wall_us_per_token_batched": 7.289968750114895
+    },
+    {
+      "B": 8,
+      "K": 512,
+      "N": 1408,
+      "separate_wall_us": 222.94088000307966,
+      "separate_kernel_us": 215.20530000000014,
+      "separate_kernel_count": 8.0,
+      "batched_wall_us": 30.551555000783992,
+      "batched_kernel_us": 30.41510000000003,
+      "batched_kernel_count": 1.0,
+      "batched_kernel": "gemmSN_TN_kernel",
+      "weight_reads_separate_bytes": 23068672,
+      "weight_reads_batched_bytes": 2883584,
+      "speedup_wall": 7.297202384538486,
+      "wall_us_per_token_batched": 3.818944375097999
+    },
+    {
+      "B": 16,
+      "K": 512,
+      "N": 1408,
+      "separate_wall_us": 446.66291665862445,
+      "separate_kernel_us": 433.5958000000002,
+      "separate_kernel_count": 16.0,
+      "batched_wall_us": 56.48963999988155,
+      "batched_kernel_us": 56.0111,
+      "batched_kernel_count": 1.0,
+      "batched_kernel": "gemmSN_TN_kernel",
+      "weight_reads_separate_bytes": 46137344,
+      "weight_reads_batched_bytes": 2883584,
+      "speedup_wall": 7.906988195703868,
+      "wall_us_per_token_batched": 3.5306024999925967
+    },
+    {
+      "B": 32,
+      "K": 512,
+      "N": 1408,
+      "separate_wall_us": 883.8777999926606,
+      "separate_kernel_us": 863.2872999999997,
+      "separate_kernel_count": 32.0,
+      "batched_wall_us": 41.035655000314364,
+      "batched_kernel_us": 40.12420000000005,
+      "batched_kernel_count": 2.0,
+      "batched_kernel": "ampere_sgemm_64x32_sliced1x4_tn",
+      "weight_reads_separate_bytes": 92274688,
+      "weight_reads_batched_bytes": 2883584,
+      "speedup_wall": 21.53926384228275,
+      "wall_us_per_token_batched": 1.2823642187598239
+    }
+  ],
+  "kv_cat": {
+    "row_bytes": 512,
+    "per_length": [
+      {
+        "T": 16,
+        "wall_us": 5.983659999628799,
+        "stream_us": 5.75872004032135,
+        "kernel_us": 1.558400000000006,
+        "kernel": "at::native::(anonymous namespace)::CatArrayBatchedCopy_vecto",
+        "bytes_copied": 17408,
+        "useful_bytes": 512
+      },
+      {
+        "T": 32,
+        "wall_us": 7.539080000924514,
+        "stream_us": 7.333599925041199,
+        "kernel_us": 1.5170000000000528,
+        "kernel": "at::native::(anonymous namespace)::CatArrayBatchedCopy_vecto",
+        "bytes_copied": 33792,
+        "useful_bytes": 512
+      },
+      {
+        "T": 64,
+        "wall_us": 10.819529999253064,
+        "stream_us": 10.53056001663208,
+        "kernel_us": 1.5834000000000288,
+        "kernel": "at::native::(anonymous namespace)::CatArrayBatchedCopy_vecto",
+        "bytes_copied": 66560,
+        "useful_bytes": 512
+      },
+      {
+        "T": 128,
+        "wall_us": 7.697150000467445,
+        "stream_us": 7.489920258522034,
+        "kernel_us": 1.6800000000000181,
+        "kernel": "at::native::(anonymous namespace)::CatArrayBatchedCopy_vecto",
+        "bytes_copied": 132096,
+        "useful_bytes": 512
+      },
+      {
+        "T": 256,
+        "wall_us": 12.03631999942445,
+        "stream_us": 11.783039569854736,
+        "kernel_us": 1.8112999999999828,
+        "kernel": "at::native::(anonymous namespace)::CatArrayBatchedCopy_vecto",
+        "bytes_copied": 263168,
+        "useful_bytes": 512
+      },
+      {
+        "T": 384,
+        "wall_us": 15.594134999901144,
+        "stream_us": 13.702559471130371,
+        "kernel_us": 1.949000000000001,
+        "kernel": "at::native::(anonymous namespace)::CatArrayBatchedCopy_vecto",
+        "bytes_copied": 394240,
+        "useful_bytes": 512
+      },
+      {
+        "T": 511,
+        "wall_us": 8.904470000743459,
+        "stream_us": 8.634880185127258,
+        "kernel_us": 2.124800000000005,
+        "kernel": "at::native::(anonymous namespace)::CatArrayBatchedCopy_vecto",
+        "bytes_copied": 524288,
+        "useful_bytes": 512
+      }
+    ],
+    "decode_sim": {
+      "prompt_len": 128,
+      "steps": 20,
+      "cat_calls": 320,
+      "allocations": 320,
+      "allocations_per_step": 16.0,
+      "stream_ms_per_step": 0.19693440198898315
+    },
+    "full_generation": {
+      "prompt_len": 128,
+      "new_tokens": 384,
+      "bytes_copied": 2016411648,
+      "bytes_new_kv": 3145728,
+      "cache_bytes_at_end": 4194304
+    }
+  },
+  "forward_estimate": {
+    "prefill": {
+      "M": 128,
+      "matmul_flops": 7801012224.0,
+      "matmul_kernel_ms": 3.8273946000000008,
+      "matmul_kernel_launches": 114.0,
+      "weight_bytes": 121890816.0,
+      "achieved_tflops": 2.0382043241634924,
+      "flops_per_token": 60945408.0
+    },
+    "decode": {
+      "M": 1,
+      "matmul_flops": 60945408.0,
+      "matmul_kernel_ms": 1.1376120000000018,
+      "matmul_kernel_launches": 57.0,
+      "weight_bytes": 121890816.0,
+      "achieved_tflops": 0.0535731057689264,
+      "flops_per_token": 60945408.0
+    }
+  },
+  "phase13": {
+    "prefill_128": {
+      "wall_ms": 7.132,
+      "gpu_busy_ms": 6.232,
+      "gpu_util": 0.8740000000000001,
+      "kernels_per_step": 403,
+      "matmul_share": 0.725,
+      "matmul_ms": 4.5182
+    },
+    "decode_20": {
+      "wall_ms": 5.838,
+      "gpu_busy_ms": 2.14,
+      "gpu_util": 0.36700000000000005,
+      "kernels_per_step": 424,
+      "matmul_share": 0.5770000000000001,
+      "matmul_ms": 1.23478
+    }
+  }
+}

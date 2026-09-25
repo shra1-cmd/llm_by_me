@@ -123,6 +123,9 @@ class ContinuousBatchingEngine(InferenceEngine):
         needs preemption, which is out of scope here.
         """
 
+        if not self.paged_kv:
+            return None
+
         manager = self.kv_cache_manager
 
         reserved = sum(

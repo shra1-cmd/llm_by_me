@@ -1,7 +1,31 @@
+"""
+Grouped-query self-attention with RoPE and an optional KV cache.
+
+    x -> q/k/v projections -> split heads -> RoPE (new positions only)
+      -> append new k/v to the KV cache (Phase 4) -> repeat k/v heads
+         for GQA -> scaled_dot_product_attention (causal, or an
+         explicit mask for cached / padded batches, Phase 4/9)
+      -> merge heads -> output projection
+
+Phase 13: each stage runs inside a named profiler region
+(attention/qkv_proj, attention/rope, attention/kv_cache,
+attention/gqa_repeat, attention/mask, attention/sdpa,
+attention/out_proj). Regions are no-ops unless profiling is enabled
+(see src/model/profiling.py).
+
+Phase 15 fast paths (src/model/fast_paths.py, all off by default):
+fused_qkv runs q/k/v as one matmul over a fused weight (built by
+prepare_fast_paths), decode_no_mask skips the mask for a single
+unpadded query, and sdpa_gqa lets SDPA broadcast the KV heads instead
+of materialising repeat_interleave copies.
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from src.model import fast_paths
+from src.model.profiling import region
 from src.model.rope import RotaryEmbedding
 
 
@@ -69,6 +93,14 @@ class GroupedQueryAttention(nn.Module):
 
         self.dropout = dropout
 
+        # Phase 15 fused_qkv: set by prepare_fast_paths()
+        self.register_buffer("qkv_weight", None, persistent=False)
+
+    def prepare_fast_paths(self):
+        """Fuse q/k/v weights into one [q+2*kv, hidden] buffer (fast_paths.prepare)."""
+
+        fast_paths.fuse_linears(self, "qkv_weight", [self.q_proj, self.k_proj, self.v_proj])
+
     def forward(
         self,
         x: torch.Tensor,
@@ -109,9 +141,17 @@ class GroupedQueryAttention(nn.Module):
         # QKV projections (only for the new tokens in x)
         # --------------------------------------------------
 
-        q = self.q_proj(x)
-        k = self.k_proj(x)
-        v = self.v_proj(x)
+        with region("attention/qkv_proj"):
+            if fast_paths.FLAGS.fused_qkv and self.qkv_weight is not None:
+                kv_dim = self.num_kv_heads * self.head_dim
+                q, k, v = F.linear(x, self.qkv_weight).split(
+                    [self.hidden_dim, kv_dim, kv_dim],
+                    dim=-1,
+                )
+            else:
+                q = self.q_proj(x)
+                k = self.k_proj(x)
+                v = self.v_proj(x)
 
         # --------------------------------------------------
         # Split into heads
@@ -152,12 +192,13 @@ class GroupedQueryAttention(nn.Module):
         # offset (past_seq_len). Cached k already has RoPE baked in
         # from when it was computed, so it must not be rotated again.
 
-        q, k = self.rope(
-            q,
-            k,
-            start_pos=past_seq_len,
-            position_ids=position_ids,
-        )
+        with region("attention/rope"):
+            q, k = self.rope(
+                q,
+                k,
+                start_pos=past_seq_len,
+                position_ids=position_ids,
+            )
 
         # --------------------------------------------------
         # KV cache
@@ -168,7 +209,8 @@ class GroupedQueryAttention(nn.Module):
         # k/v are just the new tokens' k/v, same as Phase 3.
 
         if kv_cache is not None:
-            k, v = kv_cache.update(layer_idx, k, v)
+            with region("attention/kv_cache"):
+                k, v = kv_cache.update(layer_idx, k, v)
 
         # --------------------------------------------------
         # GQA
@@ -185,16 +227,19 @@ class GroupedQueryAttention(nn.Module):
         # Each KV head is shared by 4 Q heads.
         # --------------------------------------------------
 
-        if self.num_groups > 1:
-            k = k.repeat_interleave(
-                self.num_groups,
-                dim=1,
-            )
+        use_sdpa_gqa = fast_paths.FLAGS.sdpa_gqa and self.num_groups > 1
 
-            v = v.repeat_interleave(
-                self.num_groups,
-                dim=1,
-            )
+        if self.num_groups > 1 and not use_sdpa_gqa:
+            with region("attention/gqa_repeat"):
+                k = k.repeat_interleave(
+                    self.num_groups,
+                    dim=1,
+                )
+
+                v = v.repeat_interleave(
+                    self.num_groups,
+                    dim=1,
+                )
 
         # --------------------------------------------------
         # Causal self-attention
@@ -209,41 +254,49 @@ class GroupedQueryAttention(nn.Module):
         # not reliably produce this for a non-square (T_q != T_k)
         # attention, so the mask is built explicitly instead.
 
-        if attention_mask is not None:
-            attn_mask = attention_mask
-            is_causal = False
-        elif past_seq_len == 0:
-            attn_mask = None
-            is_causal = True
-        else:
-            total_len = past_seq_len + T
+        with region("attention/mask"):
+            if attention_mask is not None:
+                attn_mask = attention_mask
+                is_causal = False
+            elif past_seq_len == 0:
+                attn_mask = None
+                is_causal = True
+            elif T == 1 and fast_paths.FLAGS.decode_no_mask:
+                # One new query at the last position: every key is at
+                # or before it, so the causal mask would be all True.
+                attn_mask = None
+                is_causal = False
+            else:
+                total_len = past_seq_len + T
 
-            query_positions = torch.arange(
-                past_seq_len,
-                total_len,
-                device=x.device,
-            ).unsqueeze(1)
+                query_positions = torch.arange(
+                    past_seq_len,
+                    total_len,
+                    device=x.device,
+                ).unsqueeze(1)
 
-            key_positions = torch.arange(
-                total_len,
-                device=x.device,
-            ).unsqueeze(0)
+                key_positions = torch.arange(
+                    total_len,
+                    device=x.device,
+                ).unsqueeze(0)
 
-            attn_mask = key_positions <= query_positions
-            is_causal = False
+                attn_mask = key_positions <= query_positions
+                is_causal = False
 
-        attn_output = F.scaled_dot_product_attention(
-            q,
-            k,
-            v,
-            attn_mask=attn_mask,
-            dropout_p=(
-                self.dropout
-                if self.training
-                else 0.0
-            ),
-            is_causal=is_causal,
-        )
+        with region("attention/sdpa"):
+            attn_output = F.scaled_dot_product_attention(
+                q,
+                k,
+                v,
+                attn_mask=attn_mask,
+                dropout_p=(
+                    self.dropout
+                    if self.training
+                    else 0.0
+                ),
+                is_causal=is_causal,
+                enable_gqa=use_sdpa_gqa,
+            )
 
         # [B, H, T, D]
         # -> [B, T, H, D]
@@ -256,10 +309,11 @@ class GroupedQueryAttention(nn.Module):
         # [B, T, H, D]
         # -> [B, T, hidden_dim]
 
-        attn_output = attn_output.contiguous().view(
-            B,
-            T,
-            C,
-        )
+        with region("attention/out_proj"):
+            attn_output = attn_output.contiguous().view(
+                B,
+                T,
+                C,
+            )
 
-        return self.out_proj(attn_output)
+            return self.out_proj(attn_output)

@@ -8,9 +8,25 @@ need to thread cache state through return values.
 
 One sequence per KVCache. No eviction. BatchedKVCache (below) only
 stacks several of them temporarily for one batched forward pass.
+
+Phase 13: the torch.cat growth runs in profiler region "kv_cache/cat",
+BatchedKVCache's pad+stack in "kv_cache/batch_gather" (no-ops unless
+profiling is enabled, see src/model/profiling.py).
+
+Phase 15: StaticKVCache is a drop-in replacement for KVCache that
+preallocates [B, H, capacity, D] per layer on first use and writes
+each step's K/V in place at the current length, instead of
+torch.cat-ing a new, one-token-longer tensor every step:
+
+    KVCache.update        allocate T+1 rows, copy T old + 1 new  (every step)
+    StaticKVCache.update  copy 1 new row into buffer[:, :, T]    (no allocation)
+
+Region "kv_cache/write" marks the in-place write.
 """
 
 import torch
+
+from src.model.profiling import region
 
 
 class KVCache:
@@ -68,14 +84,15 @@ class KVCache:
             self.key_cache[layer_idx] = key
             self.value_cache[layer_idx] = value
         else:
-            self.key_cache[layer_idx] = torch.cat(
-                [self.key_cache[layer_idx], key],
-                dim=2,
-            )
-            self.value_cache[layer_idx] = torch.cat(
-                [self.value_cache[layer_idx], value],
-                dim=2,
-            )
+            with region("kv_cache/cat"):
+                self.key_cache[layer_idx] = torch.cat(
+                    [self.key_cache[layer_idx], key],
+                    dim=2,
+                )
+                self.value_cache[layer_idx] = torch.cat(
+                    [self.value_cache[layer_idx], value],
+                    dim=2,
+                )
 
         return self.key_cache[layer_idx], self.value_cache[layer_idx]
 
@@ -99,6 +116,117 @@ class KVCache:
         cache = cls(num_layers=len(keys))
         cache.key_cache = list(keys)
         cache.value_cache = list(values)
+
+        return cache
+
+
+class StaticKVCache:
+    """
+    Phase 15: preallocated per-layer K/V storage with a write cursor.
+
+        buffer [B, H, capacity, D]   allocated on the first update
+        ┌──────────────────────┬───────────────────┐
+        │ used: [0, length)    │ free              │
+        └──────────────────────┴───────────────────┘
+        update(k_new [B, H, t, D]) -> buffer[:, :, length:length+t] = k_new
+                                      length += t
+                                      return buffer[:, :, :length] (a view)
+
+    Same interface as KVCache (get_seq_length / get / update / append /
+    from_tensors), so the model, ModelRunner and BatchedKVCache work
+    with either. Buffers take shape, dtype and device from the first
+    K/V they see, so the cache needs only the layer count and capacity.
+
+    The views returned by get/update alias the buffer: a later update
+    writes past their end, never inside them, so earlier results stay
+    valid.
+    """
+
+    def __init__(self, num_layers: int, capacity: int):
+        if capacity < 1:
+            raise ValueError("StaticKVCache capacity must be >= 1")
+
+        self.num_layers = num_layers
+        self.capacity = capacity
+
+        self.key_cache: list[torch.Tensor | None] = [None] * num_layers
+        self.value_cache: list[torch.Tensor | None] = [None] * num_layers
+        self.lengths = [0] * num_layers
+
+    def get_seq_length(self, layer_idx: int = 0) -> int:
+        return self.lengths[layer_idx]
+
+    def get(self, layer_idx: int):
+        n = self.lengths[layer_idx]
+
+        if n == 0:
+            return None
+
+        return (
+            self.key_cache[layer_idx][:, :, :n],
+            self.value_cache[layer_idx][:, :, :n],
+        )
+
+    def _allocate(self, layer_idx: int, key: torch.Tensor):
+        B, H, _, D = key.shape
+        shape = (B, H, self.capacity, D)
+
+        self.key_cache[layer_idx] = torch.empty(shape, dtype=key.dtype, device=key.device)
+        self.value_cache[layer_idx] = torch.empty(shape, dtype=key.dtype, device=key.device)
+
+    def update(
+        self,
+        layer_idx: int,
+        key: torch.Tensor,
+        value: torch.Tensor,
+    ):
+        """
+        Write the new tokens' K/V at the current length and return the
+        full (key, value) so far as views of the buffer.
+
+        key/value shape: [B, num_kv_heads, T_new, head_dim]
+        """
+
+        start = self.lengths[layer_idx]
+        end = start + key.shape[2]
+
+        if end > self.capacity:
+            raise ValueError(
+                f"StaticKVCache overflow: {end} tokens > capacity {self.capacity}"
+            )
+
+        if self.key_cache[layer_idx] is None:
+            self._allocate(layer_idx, key)
+
+        with region("kv_cache/write"):
+            self.key_cache[layer_idx][:, :, start:end].copy_(key)
+            self.value_cache[layer_idx][:, :, start:end].copy_(value)
+
+        self.lengths[layer_idx] = end
+
+        return (
+            self.key_cache[layer_idx][:, :, :end],
+            self.value_cache[layer_idx][:, :, :end],
+        )
+
+    def append(self, layer_idx: int, key: torch.Tensor, value: torch.Tensor):
+        """update() without needing the result (same interface as PagedKVCache)."""
+
+        self.update(layer_idx, key, value)
+
+    @classmethod
+    def from_tensors(
+        cls,
+        keys: list[torch.Tensor],
+        values: list[torch.Tensor],
+        capacity: int,
+    ) -> "StaticKVCache":
+        """Build a cache holding keys[i] / values[i] for layer i (copied in)."""
+
+        cache = cls(num_layers=len(keys), capacity=capacity)
+
+        for layer_idx, (k, v) in enumerate(zip(keys, values)):
+            cache.update(layer_idx, k, v)
 
         return cache
 
@@ -132,9 +260,10 @@ class BatchedKVCache:
         self.key_cache: list[torch.Tensor] = []
         self.value_cache: list[torch.Tensor] = []
 
-        for layer_idx in range(self.num_layers):
-            self.key_cache.append(self._pad_and_stack(caches, layer_idx, keys=True))
-            self.value_cache.append(self._pad_and_stack(caches, layer_idx, keys=False))
+        with region("kv_cache/batch_gather"):
+            for layer_idx in range(self.num_layers):
+                self.key_cache.append(self._pad_and_stack(caches, layer_idx, keys=True))
+                self.value_cache.append(self._pad_and_stack(caches, layer_idx, keys=False))
 
     def _pad_and_stack(self, caches, layer_idx, keys):
         rows = []
@@ -161,8 +290,9 @@ class BatchedKVCache:
         key: torch.Tensor,
         value: torch.Tensor,
     ):
-        self.key_cache[layer_idx] = torch.cat([self.key_cache[layer_idx], key], dim=2)
-        self.value_cache[layer_idx] = torch.cat([self.value_cache[layer_idx], value], dim=2)
+        with region("kv_cache/cat"):
+            self.key_cache[layer_idx] = torch.cat([self.key_cache[layer_idx], key], dim=2)
+            self.value_cache[layer_idx] = torch.cat([self.value_cache[layer_idx], value], dim=2)
 
         return self.key_cache[layer_idx], self.value_cache[layer_idx]
 

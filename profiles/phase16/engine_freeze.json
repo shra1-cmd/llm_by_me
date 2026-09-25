@@ -1,0 +1,248 @@
+{
+  "name": "our engine \u2014 final version",
+  "frozen_at": "2026-09-24 22:51:51",
+  "git": {
+    "commit": "8a242a5",
+    "branch": "V1",
+    "dirty": true
+  },
+  "model": {
+    "class": "src.model.model.V1LanguageModel",
+    "config": "ModelConfig(vocab_size=15485, max_seq_len=512, hidden_dim=512, num_layers=8, num_q_heads=8, num_kv_heads=2, ffn_dim=1408, dropout=0.0, rms_norm_eps=1e-06)",
+    "architecture": "decoder-only, GQA attention + RoPE (interleaved pairs), pre-RMSNorm, SwiGLU MLP, tied LM head, no biases"
+  },
+  "checkpoint": {
+    "path": "checkpoints/v1/step_9950.pt",
+    "sha256_12": "8f793d0d28d9",
+    "step": 9950,
+    "loss": 2.1325927078723907
+  },
+  "tokenizer": {
+    "path": "tokenizer/tokenizer.json",
+    "sha256_12": "cacfc1bfee46",
+    "type": "byte-level BPE (src/tokenizer/tokenizer.py)",
+    "vocab_size": 15485,
+    "special_tokens": {
+      "<pad>": 0,
+      "<unk>": 1,
+      "<bos>": 2,
+      "<eos>": 3
+    }
+  },
+  "engine": {
+    "request": "src/inference/request.py InferenceRequest (WAITING\u2192PREFILLING\u2192DECODING\u2192FINISHED/ABORTED)",
+    "scheduler": "src/inference/scheduler.py FIFO Scheduler (waiting queue + running dict)",
+    "batching": "src/inference/batch.py right-padded prefill batches, [B,1] decode batches",
+    "continuous_batching": "src/inference/continuous_batching.py ADMIT\u2192PREFILL\u2192DECODE\u2192RETIRE per step",
+    "kv_cache": {
+      "paged": "src/inference/kv_cache_manager.py KVCacheManager + PagedKVCache",
+      "contiguous": "src/inference/kv_cache.py KVCache (torch.cat) / StaticKVCache (Phase 15)",
+      "default_block_size": 16,
+      "default_pool": "16 full-length sequences"
+    },
+    "model_runner": "src/inference/model_runner.py prefill / decode / prefill_batch / decode_batch",
+    "sampling": {
+      "class": "src/inference/sampler.py Sampler",
+      "methods": [
+        "greedy",
+        "temperature",
+        "top_k",
+        "top_p",
+        "repetition_penalty",
+        "repeat_ngram_size"
+      ],
+      "defaults": {
+        "greedy": false,
+        "temperature": 1.0,
+        "top_k": 0,
+        "top_p": 1.0,
+        "repetition_penalty": 1.0,
+        "repeat_ngram_size": 0
+      }
+    },
+    "fast_paths": [
+      "rope_cache",
+      "fused_rmsnorm",
+      "decode_no_mask",
+      "sdpa_gqa",
+      "fused_qkv",
+      "fused_gate_up",
+      "last_token_logits"
+    ]
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "gpu": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "compute_capability": "8.6",
+    "sm_count": 20,
+    "gpu_memory_mb": 5806,
+    "driver": "595.91.07",
+    "fp32_matmul_precision": "highest",
+    "sdpa": {
+      "flash": true,
+      "mem_efficient": true,
+      "math": true
+    }
+  },
+  "source_hashes": {
+    "src/__init__.py": "e3b0c442",
+    "src/data/__init__.py": "e3b0c442",
+    "src/data/bin_dataset.py": "15646414",
+    "src/data/dataloader.py": "55eccc06",
+    "src/data/dataset.py": "ef298274",
+    "src/data/prepare_data.py": "dd60955f",
+    "src/inference/__init__.py": "e3b0c442",
+    "src/inference/batch.py": "c8a4e7f7",
+    "src/inference/benchmark.py": "80075b91",
+    "src/inference/checkpoint_loader.py": "e1150f1d",
+    "src/inference/continuous_batching.py": "4f6d8873",
+    "src/inference/correctness.py": "5987e603",
+    "src/inference/inference_engine.py": "893b8cf6",
+    "src/inference/kv_cache.py": "922d8d18",
+    "src/inference/kv_cache_manager.py": "2a491445",
+    "src/inference/model_runner.py": "8c218bb4",
+    "src/inference/profiler.py": "4257572f",
+    "src/inference/request.py": "240c955f",
+    "src/inference/sampler.py": "947f7da4",
+    "src/inference/scheduler.py": "c109ed19",
+    "src/model/__init__.py": "e3b0c442",
+    "src/model/attention.py": "7d605a28",
+    "src/model/block.py": "2639f5a0",
+    "src/model/configuration_v1.py": "f26225b6",
+    "src/model/fast_paths.py": "643e79f7",
+    "src/model/model.py": "27ad37a8",
+    "src/model/modeling_v1.py": "e4c037da",
+    "src/model/profiling.py": "37dca201",
+    "src/model/rmsnorm.py": "c101ede5",
+    "src/model/rope.py": "c0f73012",
+    "src/model/swiglu.py": "5edc3af6",
+    "src/tokenizer/__init__.py": "e3b0c442",
+    "src/tokenizer/tokenizer.py": "535299fa",
+    "src/tokenizer/train_tokenizer.py": "8276ae93",
+    "src/training/__init__.py": "e3b0c442",
+    "src/training/checkpoint.py": "5a07026b",
+    "src/training/optimizer.py": "db44c7a2",
+    "src/training/scheduler.py": "58f35b02",
+    "src/training/trainer.py": "602a500d",
+    "src/utils/__init__.py": "e3b0c442",
+    "configs/v1.py": "6ed847f7"
+  },
+  "stored_results": {
+    "phase15": {
+      "source": "profiles/phase15/results.json",
+      "final_config": {
+        "kv_cache": "dynamic",
+        "flags": [
+          "decode_no_mask",
+          "fused_rmsnorm",
+          "last_token_logits",
+          "rope_cache"
+        ],
+        "compile": true
+      },
+      "paired_vs_baseline": {
+        "prefill": {
+          "a_ms": 4.676002000223889,
+          "b_ms": 3.812108499914757,
+          "ratio": 0.8178458816637235,
+          "speedup": 1.2227242594481553
+        },
+        "decode": {
+          "a_ms": 3.9148144250020778,
+          "b_ms": 1.9084251749973191,
+          "ratio": 0.4873456103675238,
+          "speedup": 2.051931891303722
+        }
+      },
+      "baseline_decode_launches_per_step": 424.4,
+      "final_decode_launches_per_step": 132.0,
+      "gate_passed": true,
+      "gate_max_abs_error": 3.0517578125e-05,
+      "ladder": [
+        {
+          "name": "baseline",
+          "decision": "reference"
+        },
+        {
+          "name": "kv_preallocated",
+          "decision": "rejected: within noise (\u00b13%; decode -0.2%, prefill -1.5%)"
+        },
+        {
+          "name": "rope_cache",
+          "decision": "kept: decode +10.0%, prefill +2.4%"
+        },
+        {
+          "name": "fused_rmsnorm",
+          "decision": "kept: decode +14.5%, prefill +6.8%"
+        },
+        {
+          "name": "decode_no_mask",
+          "decision": "kept: decode +17.7%, prefill +0.5%"
+        },
+        {
+          "name": "sdpa_gqa",
+          "decision": "rejected: regression (decode -24.9%, prefill -12.9%)"
+        },
+        {
+          "name": "fused_qkv",
+          "decision": "rejected: within noise (\u00b13%; decode +2.2%, prefill +1.5%)"
+        },
+        {
+          "name": "fused_gate_up",
+          "decision": "rejected: within noise (\u00b13%; decode +0.2%, prefill +1.1%)"
+        },
+        {
+          "name": "last_token_logits",
+          "decision": "kept: decode -0.7%, prefill +7.6%"
+        },
+        {
+          "name": "torch_compile",
+          "decision": "kept: decode +26.6%, prefill +4.3%"
+        }
+      ]
+    },
+    "phase14": {
+      "source": "profiles/phase14/results.json",
+      "roofline": {
+        "peak_fp32_tflops": 2.864774961890835,
+        "peak_fp32_kernel": "ampere_sgemm_128x64_tn",
+        "peak_tf32_tflops": 5.970454265980467,
+        "peak_tf32_kernel": "void cutlass::Kernel2<cutlass_80_tensorop_s1688gemm_128x256_16x3_tn_align4>(cutlass_80_tensorop_s1688gemm_128x256_16x3_tn_align4::Params)",
+        "dram_bandwidth_gbs": 111.04462264694897,
+        "ridge_point_fp32": 25.798412328339314,
+        "tiny_kernel_wall_us": 4.586159000155021,
+        "peak_fp32_source": "M sweep, [256,512]x[512,1408]"
+      },
+      "forward_estimate": {
+        "prefill": {
+          "M": 128,
+          "matmul_flops": 7801012224.0,
+          "matmul_kernel_ms": 3.8273946000000008,
+          "matmul_kernel_launches": 114.0,
+          "weight_bytes": 121890816.0,
+          "achieved_tflops": 2.0382043241634924,
+          "flops_per_token": 60945408.0
+        },
+        "decode": {
+          "M": 1,
+          "matmul_flops": 60945408.0,
+          "matmul_kernel_ms": 1.1376120000000018,
+          "matmul_kernel_launches": 57.0,
+          "weight_bytes": 121890816.0,
+          "achieved_tflops": 0.0535731057689264,
+          "flops_per_token": 60945408.0
+        }
+      }
+    },
+    "phase13": {
+      "source": "profiles/FINDINGS.md",
+      "summary_rows": [
+        "| prefill_128 | 1 | 7.132 | 6.232 | 87.4% | 403 | 72.5% | 6.8% |",
+        "| decode_20 | 20 | 5.838 | 2.140 | 36.7% | 424 | 57.7% | 17.3% |"
+      ]
+    }
+  }
+}

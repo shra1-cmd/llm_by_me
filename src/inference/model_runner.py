@@ -38,7 +38,18 @@ blocks. Without them the runner falls back to a private KVCache, as
 in Phases 6-9. Decode works with either, since both expose the same
 get_seq_length / get / update interface.
 
-`generate` below stays the untouched naive reference.
+`generate` below stays the naive reference. Phase 12 only adds an
+optional `on_token(token_id)` callback to it, so benchmarks can
+timestamp its tokens the same way as the engines'.
+
+Phase 13: sampling runs in profiler region "sampling" and the batched
+decode's per-row K/V scatter in "kv_cache/scatter" (no-ops unless
+profiling is enabled, see src/model/profiling.py).
+
+Phase 15: `kv_cache="static"` makes every private cache the runner (or
+the engine, via new_kv_cache) creates a preallocated StaticKVCache of
+capacity max_seq_len instead of a torch.cat-grown KVCache. Default
+stays "dynamic" (the Phase 4-14 behaviour).
 """
 
 import time
@@ -47,8 +58,9 @@ from dataclasses import dataclass
 import torch
 
 from src.inference.batch import Batch, DECODE, PREFILL
-from src.inference.kv_cache import BatchedKVCache, KVCache
+from src.inference.kv_cache import BatchedKVCache, KVCache, StaticKVCache
 from src.inference.sampler import Sampler
+from src.model.profiling import region
 
 
 @dataclass
@@ -89,8 +101,13 @@ class ModelRunner:
         sampler: Sampler,
         device: str = "cuda",
         eos_token: str = "<eos>",
+        kv_cache: str = "dynamic",
     ):
+        if kv_cache not in ("dynamic", "static"):
+            raise ValueError(f"kv_cache must be 'dynamic' or 'static', got {kv_cache!r}")
+
         self.model = model
+        self.kv_cache_kind = kv_cache
         self.tokenizer = tokenizer
         self.sampler = sampler
         self.device = device
@@ -101,6 +118,24 @@ class ModelRunner:
         self.max_seq_len = (
             max_seq_len.max_seq_len if max_seq_len is not None else None
         )
+
+    def new_kv_cache(self):
+        """An empty private cache of the configured kind."""
+
+        num_layers = self.model.config.num_layers
+
+        if self.kv_cache_kind == "static":
+            return StaticKVCache(num_layers, capacity=self.max_seq_len)
+
+        return KVCache(num_layers=num_layers)
+
+    def kv_cache_from_tensors(self, keys, values):
+        """A private cache of the configured kind holding these per-layer K/V."""
+
+        if self.kv_cache_kind == "static":
+            return StaticKVCache.from_tensors(keys, values, capacity=self.max_seq_len)
+
+        return KVCache.from_tensors([k.clone() for k in keys], [v.clone() for v in values])
 
     @torch.inference_mode()
     def prefill(self, input_ids: torch.Tensor, kv_cache=None) -> PrefillOutput:
@@ -123,7 +158,7 @@ class ModelRunner:
             )
 
         if kv_cache is None:
-            kv_cache = KVCache(num_layers=self.model.config.num_layers)
+            kv_cache = self.new_kv_cache()
         elif kv_cache.get_seq_length() != 0:
             raise ValueError("prefill needs an empty KV cache")
 
@@ -214,10 +249,10 @@ class ModelRunner:
 
             for layer_idx in range(batched_cache.num_layers):
                 k, v = batched_cache.get(layer_idx)
-                keys.append(k[row:row + 1, :, :n].clone())
-                values.append(v[row:row + 1, :, :n].clone())
+                keys.append(k[row:row + 1, :, :n])
+                values.append(v[row:row + 1, :, :n])
 
-            kv_caches.append(KVCache.from_tensors(keys, values))
+            kv_caches.append(self.kv_cache_from_tensors(keys, values))
 
         return BatchPrefillOutput(logits=last_logits, kv_caches=kv_caches)
 
@@ -243,15 +278,16 @@ class ModelRunner:
             attention_mask=batch.model_attention_mask(),
         )
 
-        for layer_idx in range(batched_cache.num_layers):
-            new_k, new_v = batched_cache.new_kv(layer_idx)
+        with region("kv_cache/scatter"):
+            for layer_idx in range(batched_cache.num_layers):
+                new_k, new_v = batched_cache.new_kv(layer_idx)
 
-            for row, cache in enumerate(batch.kv_caches):
-                cache.append(
-                    layer_idx,
-                    new_k[row:row + 1],
-                    new_v[row:row + 1],
-                )
+                for row, cache in enumerate(batch.kv_caches):
+                    cache.append(
+                        layer_idx,
+                        new_k[row:row + 1],
+                        new_v[row:row + 1],
+                    )
 
         return BatchDecodeOutput(logits=logits[:, -1, :], kv_caches=batch.kv_caches)
 
@@ -260,10 +296,14 @@ class ModelRunner:
         self,
         prompt: str,
         max_new_tokens: int = 50,
+        on_token=None,
     ) -> dict:
         """
         prompt -> generated text, plus a small stats dict for
         Phase 3's naive-inference baseline.
+
+        on_token: optional callback(token_id), called once per
+        generated token (Phase 12 benchmark timing).
         """
 
         prompt_ids = self.tokenizer.encode(prompt)
@@ -292,16 +332,20 @@ class ModelRunner:
 
             next_token_logits = logits[:, -1, :]
 
-            next_token = self.sampler.sample(
-                next_token_logits,
-                generated,
-            )
+            with region("sampling"):
+                next_token = self.sampler.sample(
+                    next_token_logits,
+                    generated,
+                )
 
             next_token = next_token.unsqueeze(-1)
 
             generated = torch.cat([generated, next_token], dim=-1)
 
             num_generated += 1
+
+            if on_token is not None:
+                on_token(next_token.item())
 
             if (
                 self.eos_token_id is not None

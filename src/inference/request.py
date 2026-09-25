@@ -31,9 +31,15 @@ first sampled token already completes the request.
 Phase 10 adds FinishReason.OUT_OF_KV_BLOCKS: a request is aborted
 with that reason when the KVCacheManager cannot give it (more)
 blocks, instead of corrupting another request's memory.
+
+Phase 12 adds an optional `on_token(request, token_id)` callback,
+fired from append_token for every generated token. Benchmarks use it
+to timestamp tokens (TTFT / inter-token latency) identically in every
+engine mode. It defaults to None and does not affect generation.
 """
 
 import itertools
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -134,6 +140,11 @@ class InferenceRequest:
     kv_cache: KVCache | None = None
     status: RequestStatus = RequestStatus.WAITING
     finish_reason: FinishReason | None = None
+
+    # Phase 12: observer for each generated token (benchmark timing).
+    on_token: Callable[["InferenceRequest", int], None] | None = field(
+        default=None, repr=False, compare=False
+    )
 
     def __post_init__(self):
         if len(self.input_tokens) == 0:
@@ -248,6 +259,9 @@ class InferenceRequest:
             )
 
         self.generated_tokens.append(int(token_id))
+
+        if self.on_token is not None:
+            self.on_token(self, int(token_id))
 
         reason = self.check_stop()
 

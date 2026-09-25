@@ -1,7 +1,19 @@
+"""
+One pre-norm transformer block:
+
+    x = x + attention(attn_norm(x))
+    x = x + mlp(ffn_norm(x))
+
+Phase 13: attn_norm / ffn_norm run in the "rmsnorm" profiler region,
+attention in "attention" and the SwiGLU MLP in "mlp" (no-ops unless
+profiling is enabled, see src/model/profiling.py).
+"""
+
 import torch
 import torch.nn as nn
 
 from src.model.attention import GroupedQueryAttention
+from src.model.profiling import region
 from src.model.rmsnorm import RMSNorm
 from src.model.swiglu import SwiGLU
 
@@ -52,17 +64,23 @@ class TransformerBlock(nn.Module):
     ) -> torch.Tensor:
 
         # Attention sub-layer
-        x = x + self.attention(
-            self.attn_norm(x),
-            kv_cache=kv_cache,
-            layer_idx=layer_idx,
-            position_ids=position_ids,
-            attention_mask=attention_mask,
-        )
+        with region("rmsnorm"):
+            h = self.attn_norm(x)
+
+        with region("attention"):
+            x = x + self.attention(
+                h,
+                kv_cache=kv_cache,
+                layer_idx=layer_idx,
+                position_ids=position_ids,
+                attention_mask=attention_mask,
+            )
 
         # FFN sub-layer
-        x = x + self.ffn(
-            self.ffn_norm(x)
-        )
+        with region("rmsnorm"):
+            h = self.ffn_norm(x)
+
+        with region("mlp"):
+            x = x + self.ffn(h)
 
         return x

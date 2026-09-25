@@ -1,8 +1,31 @@
+"""
+V1 decoder-only language model.
+
+    input_ids -> token embedding -> N x TransformerBlock (GQA attention
+    + SwiGLU MLP, pre-RMSNorm, RoPE) -> final RMSNorm
+    -> tied LM head (hidden @ embedding.T) -> logits
+
+Optional inputs added by later phases: kv_cache (Phase 4),
+position_ids / attention_mask for padded batches (Phase 9).
+
+Phase 13: forward is split into profiler regions "embedding",
+"layer_<i>", "rmsnorm" (final norm), "lm_head" and "loss" (no-ops
+unless profiling is enabled, see src/model/profiling.py).
+
+Phase 15: with fast_paths last_token_logits on, a forward that has no
+targets and no padding (attention_mask / position_ids) runs the final
+norm + LM head on the last position only and returns logits
+[B, 1, vocab]. Prefill/decode only ever read that position; skipping
+the rest removes (T-1)/T of the LM-head matmul (the biggest one).
+"""
+
 import torch
 import torch.nn as nn
 
 from configs.v1 import ModelConfig
+from src.model import fast_paths
 from src.model.block import TransformerBlock
+from src.model.profiling import region
 from src.model.rmsnorm import RMSNorm
 
 
@@ -108,7 +131,8 @@ class V1LanguageModel(nn.Module):
         # Token embedding
         # --------------------------------------------------
 
-        x = self.token_embedding(input_ids)
+        with region("embedding"):
+            x = self.token_embedding(input_ids)
 
         # [B, T]
         # ->
@@ -119,25 +143,36 @@ class V1LanguageModel(nn.Module):
         # --------------------------------------------------
 
         for layer_idx, block in enumerate(self.blocks):
-            x = block(
-                x,
-                kv_cache=kv_cache,
-                layer_idx=layer_idx,
-                position_ids=position_ids,
-                attention_mask=attention_mask,
-            )
+            with region(f"layer_{layer_idx}"):
+                x = block(
+                    x,
+                    kv_cache=kv_cache,
+                    layer_idx=layer_idx,
+                    position_ids=position_ids,
+                    attention_mask=attention_mask,
+                )
 
         # --------------------------------------------------
         # Final normalization
         # --------------------------------------------------
 
-        x = self.final_norm(x)
+        if (
+            fast_paths.FLAGS.last_token_logits
+            and targets is None
+            and attention_mask is None
+            and position_ids is None
+        ):
+            x = x[:, -1:, :]
+
+        with region("rmsnorm"):
+            x = self.final_norm(x)
 
         # --------------------------------------------------
         # Tied LM head
         # --------------------------------------------------
 
-        logits = x @ self.token_embedding.weight.T
+        with region("lm_head"):
+            logits = x @ self.token_embedding.weight.T
 
         # [B, T, hidden]
         # ->
@@ -147,13 +182,14 @@ class V1LanguageModel(nn.Module):
 
         if targets is not None:
 
-            loss = nn.functional.cross_entropy(
-                logits.view(
-                    -1,
-                    self.config.vocab_size,
-                ),
-                targets.view(-1),
-            )
+            with region("loss"):
+                loss = nn.functional.cross_entropy(
+                    logits.view(
+                        -1,
+                        self.config.vocab_size,
+                    ),
+                    targets.view(-1),
+                )
 
         return logits, loss
 

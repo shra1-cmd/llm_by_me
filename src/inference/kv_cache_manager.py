@@ -55,12 +55,18 @@ kernel is for.
 
 Not implemented yet (later phases): a PagedAttention kernel, prefix
 caching, copy-on-write / block sharing, quantization, compaction.
+
+Phase 13: pool writes run in profiler region "kv_cache/paged_write",
+block gathers in "kv_cache/paged_read" (no-ops unless profiling is
+enabled, see src/model/profiling.py).
 """
 
 import math
 from collections import deque
 
 import torch
+
+from src.model.profiling import region
 
 
 class KVCacheOutOfMemory(RuntimeError):
@@ -116,8 +122,9 @@ class KVBlockPool:
         blocks, offsets = self._slots(table, start, end)
 
         # Indexing [blocks, :, offsets, :] addresses [T_new, H, D].
-        self.k[layer_idx][blocks, :, offsets, :] = key[0].transpose(0, 1)
-        self.v[layer_idx][blocks, :, offsets, :] = value[0].transpose(0, 1)
+        with region("kv_cache/paged_write"):
+            self.k[layer_idx][blocks, :, offsets, :] = key[0].transpose(0, 1)
+            self.v[layer_idx][blocks, :, offsets, :] = value[0].transpose(0, 1)
 
     def read(self, layer_idx: int, table: torch.Tensor, length: int):
         """
@@ -134,7 +141,8 @@ class KVBlockPool:
             flat = blocks.permute(1, 0, 2, 3).reshape(H, -1, D)  # [H, nb*bs, D]
             return flat[:, :length].unsqueeze(0)
 
-        return gather(self.k[layer_idx]), gather(self.v[layer_idx])
+        with region("kv_cache/paged_read"):
+            return gather(self.k[layer_idx]), gather(self.v[layer_idx])
 
 
 # ======================================================================
